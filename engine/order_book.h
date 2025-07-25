@@ -12,7 +12,6 @@ namespace engine {
         using Side = common::Side;
         using Price = common::Price;
         using Volume = common::Volume;
-        using Quantity = common::Quantity;
         using Priority = common::Priority;
 
         std::vector<std::pair<Price, Volume>> bid_levels_;
@@ -23,7 +22,7 @@ namespace engine {
         template <typename T, typename Compare>
         void engine::OrderBookVector::add_order(T &levels, Price price, Volume volume, Compare comp);
 
-        auto get_best_prices() const;
+        std::pair<Price, Volume> get_best_prices() const;
     };
 
 }

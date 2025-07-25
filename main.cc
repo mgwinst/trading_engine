@@ -1,9 +1,15 @@
 #include "common/macros.h"
+#include "common/thread_utils.h"
 
 int main() {
-    int a = 10;
-    int b = 20;
-    common::ASSERT(a == b, "a does not equal b!");
+    int value = 1;   
 
-    std::print("never prints\n");
+    auto f1 = []() { std::print("hello world\n"); };
+    auto f2 = [](int x) { 
+        x += 1;
+        std::print("{}\n", x); 
+    };
+
+    std::thread* t = common::create_and_pin_thread(0, f2, value);
+    t->join();
 }

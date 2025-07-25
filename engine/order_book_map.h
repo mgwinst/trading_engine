@@ -3,18 +3,19 @@
 #include <cstdint>
 #include <map>
 
+#include "common/types.h"
+
 namespace engine {
     
-    enum class Side : uint8_t { bid, ask };
+    struct OrderBookMap {
 
-    using Order_ID  = uint64_t;
-    using Ticker_ID = uint64_t;
-    using Price = uint64_t;
-    using Volume = uint64_t;
-    using Quantity = uint64_t;
-    using Priority = uint64_t;
-
-    struct OrderBook {
+        using Order_ID = common::Order_ID;
+        using Ticker_ID = common::Ticker_ID;
+        using Side = common::Side;
+        using Price = common::Price;
+        using Volume = common::Volume;
+        using Quantity = common::Quantity;
+        using Priority = common::Priority;
 
         std::map<Price, Volume, std::greater<Price>> bid_levels_; 
         std::map<Price, Volume, std::less<Price>> ask_levels_; 
@@ -24,7 +25,6 @@ namespace engine {
         
         template <typename T>
         void delete_order(T::iterator it, T& levels, Order_ID order_id, Price price, Volume volume);
-
 
     };
     

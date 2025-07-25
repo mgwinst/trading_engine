@@ -1,0 +1,29 @@
+#pragma once
+
+#include <vector>
+
+#include "common/types.h"
+
+namespace engine {
+
+    struct OrderBookVector {
+
+        using Order_ID = common::Order_ID;
+        using Side = common::Side;
+        using Price = common::Price;
+        using Volume = common::Volume;
+        using Quantity = common::Quantity;
+        using Priority = common::Priority;
+
+        std::vector<std::pair<Price, Volume>> bid_levels_;
+        std::vector<std::pair<Price, Volume>> ask_levels_;
+
+        void add_order(Side side, Price price, Volume volume);
+
+        template <typename T, typename Compare>
+        void engine::OrderBookVector::add_order(T &levels, Price price, Volume volume, Compare comp);
+
+        auto get_best_prices() const;
+    };
+
+}

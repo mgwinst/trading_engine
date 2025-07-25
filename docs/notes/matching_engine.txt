@@ -1,0 +1,31 @@
+*** MATCHING ENGINE ***
+
+matching engine parameters: 
+
+    - incoming order from trader
+    - order book, containing orders already placed on the exchange
+
+    returns list of the trades and list of resting orders, which is now the new orderbook input for the next trade
+
+engine must handle different scenarios:
+
+    - best price
+    - partial fill
+    - no match
+    - multiple orders with same price
+ 
+
+
+SOME RULES:
+
+When orders are modified to reduce the quantity, the priority or position of the order in the
+queue does not change
+
+When orders are modified to increase the quantity or the price of the order is modified, it
+has the equivalent effect of canceling the order and sending the order with the new price and
+quantity values (i.e., a new priority will be assigned to it)
+
+    
+    
+
+

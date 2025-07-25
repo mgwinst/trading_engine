@@ -154,6 +154,34 @@ PROTOCOLS:
 
 
 
+low latency transport:
+
+general pattern:
+
+    Kernel bypass when receiving data from exchange (or other low latency signals)
+    dispatch/fanout (shared memory to fanout information to all the processes on your local machine)
+    
+
+Userspace Networking:
+    
+    Solarflare: 
+
+        - industry standard NIC
+
+    OpenOnload:
+
+        - compatible with BSD sockets (no code changes needed)
+
+        $ onload --profile=latency ./application
+
+    TCPDirect (even lower);
+        - custom TCP/UDP stack
+        - reduced set of features
+
+    EF_VI:
+        
+        layer 2 api: interface, buffers, memory management (similar to DPDK (intel))
+        lowest latency
 
 
 

@@ -11,4 +11,5 @@ namespace common {
     using Price = uint64_t;
     using Volume = uint64_t;
     using Priority = uint64_t;
+
 }

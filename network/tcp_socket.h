@@ -11,8 +11,9 @@
 #include <ifaddrs.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#include <print>
 #include <string>
+#include <format>
+#include <print>
 
 namespace network {
 
@@ -34,6 +35,20 @@ namespace network {
         freeifaddrs(ifaddr);
         return std::string{buffer};
     }
+
+    struct SocketConfig {
+        std::string ip{};
+        std::string iface{};
+        uint16_t port{0};
+        bool is_udp{false};
+        bool is_listening{false};
+
+        auto to_string() const {
+            return std::format("<Socket Configuration: (interface=[{}], ip address=[{}], port number=[{}], protocol=[{}], listening=[{}])>",
+                iface, ip, port, (is_udp ? "UDP" : "TCP"), is_listening);
+        }
+    };
+
 
 
 

@@ -12,8 +12,11 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <string>
+#include <cstring>
 #include <format>
 #include <print>
+
+#include "common/macros.h"
 
 namespace network {
 
@@ -39,7 +42,7 @@ namespace network {
     struct SocketConfig {
         std::string ip{};
         std::string iface{};
-        uint16_t port{0};
+        int32_t port{-1};
         bool is_udp{false};
         bool is_listening{false};
 
@@ -49,7 +52,24 @@ namespace network {
         }
     };
 
+    class Socket {
+    public: 
+        Socket(int32_t fd) : _fd{fd} {}
+        ~Socket() { close(_fd); }
 
+        bool set_non_blocking();
+        bool disable_nagle();
+        bool set_so_time_stamp();
+        bool would_block();
+        bool set_unicast_ttl(int ttl);
+        bool set_mcast_ttl(int mcast_ttl);
+        bool join_mcast(const std::string& ip);
+        auto get_fd() { return _fd; }
+        
+    private:
+        int32_t _fd;
+    };
 
+    
 
 }

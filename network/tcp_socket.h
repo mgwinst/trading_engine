@@ -11,8 +11,12 @@
 #include <ifaddrs.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#include <print>
 #include <string>
+#include <cstring>
+#include <format>
+#include <print>
+
+#include "common/macros.h"
 
 namespace network {
 
@@ -34,6 +38,42 @@ namespace network {
         freeifaddrs(ifaddr);
         return std::string{buffer};
     }
+
+    struct SocketConfig {
+        std::string ip{};
+        std::string iface{};
+        int32_t port{-1};
+        bool is_udp{false};
+        bool is_listening{false};
+
+        auto to_string() const {
+            return std::format("<Socket Configuration: (interface=[{}], ip address=[{}], port number=[{}], protocol=[{}], listening=[{}])>",
+                iface, ip, port, (is_udp ? "UDP" : "TCP"), is_listening);
+        }
+    };
+
+    class Socket {
+    public: 
+        Socket(const SocketConfig& socket_config) noexcept;
+        Socket(Socket&& socket) noexcept;
+        Socket& operator=(Socket&& socket) noexcept;
+        ~Socket();
+
+        Socket(const Socket&) = delete;
+        Socket& operator=(const Socket&) = delete;
+
+        bool set_non_blocking();
+        bool disable_nagle();
+        bool set_so_time_stamp();
+        bool would_block();
+        bool set_unicast_ttl(int ttl);
+        bool set_mcast_ttl(int mcast_ttl);
+        bool join_mcast(const std::string& ip);
+        auto get_fd() const { return _fd; }
+        
+    private:
+        int32_t _fd;
+    };
 
 
 

@@ -2,6 +2,11 @@
 
 using namespace network;
 
+Socket::Socket(const SocketConfig& socket_config) {}
+Socket::Socket(Socket&& socket) {}
+Socket& Socket::operator=(Socket&& socket) {}
+Socket::~Socket() { close(_fd); }
+
 bool Socket::set_non_blocking() {
     const auto flags = fcntl(_fd, F_GETFL, 0); // this returns the flags associated with fd currently
     if (flags == -1) return false;

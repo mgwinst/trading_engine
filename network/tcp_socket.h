@@ -54,8 +54,13 @@ namespace network {
 
     class Socket {
     public: 
-        Socket(int32_t fd) : _fd{fd} {}
-        ~Socket() { close(_fd); }
+        Socket(const SocketConfig& socket_config) noexcept;
+        Socket(Socket&& socket) noexcept;
+        Socket& operator=(Socket&& socket) noexcept;
+        ~Socket();
+
+        Socket(const Socket&) = delete;
+        Socket& operator=(const Socket&) = delete;
 
         bool set_non_blocking();
         bool disable_nagle();
@@ -64,12 +69,12 @@ namespace network {
         bool set_unicast_ttl(int ttl);
         bool set_mcast_ttl(int mcast_ttl);
         bool join_mcast(const std::string& ip);
-        auto get_fd() { return _fd; }
+        auto get_fd() const { return _fd; }
         
     private:
         int32_t _fd;
     };
 
-    
+
 
 }

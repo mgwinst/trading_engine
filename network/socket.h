@@ -15,6 +15,7 @@
 #include <cstring>
 #include <format>
 #include <print>
+#include <optional>
 
 #include "common/macros.h"
 
@@ -39,33 +40,39 @@ namespace network {
         return std::string{buffer};
     }
 
+    enum class TransportLayerProtocol : uint8_t {
+        NONE = 0,
+        TCP = 1,
+        UDP = 2
+    };
+
     struct SocketConfig {
         std::string ip{};
         std::string iface{};
         int32_t port{-1};
-        bool is_udp{false};
+        TransportLayerProtocol protocol;
         bool is_listening{false};
 
         auto to_string() const {
             return std::format("<Socket Configuration: (interface=[{}], ip address=[{}], port number=[{}], protocol=[{}], listening=[{}])>",
-                iface, ip, port, (is_udp ? "UDP" : "TCP"), is_listening);
+                iface, ip, port, (protocol == TransportLayerProtocol::TCP ? "TCP" : "UDP"), is_listening);
         }
     };
 
-    class SocketConfigFactory {
-        static std::optional<SocketConfig> from_ip(const std::string& ip, int32_t port, bool is_udp, bool is_listening) {
+    struct SocketConfigFactory {
+        static std::optional<SocketConfig> create_from_ip(const std::string& ip, int32_t port, TransportLayerProtocol proto, bool is_listening) {
             if (port <= 0 || port > 65535) return std::nullopt;
             if (ip.empty()) return std::nullopt;
-            return SocketConfig{ip, "", port, is_udp, is_listening};
+            return SocketConfig{ip, "", port, proto, is_listening};
         }
 
-        static std::optional<SocketConfig> from_interface(const std::string& iface, int32_t port, bool is_udp, bool is_listening) {
+        static std::optional<SocketConfig> create_from_interface(const std::string& iface, int32_t port, TransportLayerProtocol proto, bool is_listening) {
             if (port <= 0 || port > 65535) return std::nullopt;
 
             const auto ip = get_iface_ip(iface);
             if (ip.empty()) return std::nullopt;
 
-            return SocketConfig{ip, iface, port, is_udp, is_listening};
+            return SocketConfig{ip, iface, port, proto, is_listening};
         }
     };
 
@@ -97,13 +104,13 @@ namespace network {
     inline addrinfo get_hints(const SocketConfig& socket_config) {
         addrinfo hints{}; // C++ standard ensures POD type will zero out members, don't need to call memset(&hints, 0, sizeof(hints))
         hints.ai_family = AF_UNSPEC; // handle both iPv4 and iPv6
-        hints.ai_socktype = socket_config.is_udp ? SOCK_DGRAM : SOCK_STREAM;
-        hints.ai_protocol = socket_config.is_udp ? IPPROTO_UDP : IPPROTO_TCP;
+        hints.ai_socktype = socket_config.protocol == TransportLayerProtocol::TCP ? SOCK_STREAM : SOCK_DGRAM;
+        hints.ai_protocol = socket_config.protocol == TransportLayerProtocol::TCP ? IPPROTO_TCP : IPPROTO_UDP;
         hints.ai_flags = (socket_config.is_listening ? AI_PASSIVE : 0) | AI_NUMERICHOST | AI_NUMERICSERV;
         return hints;
     }
 
-    inline Socket create_socket(const SocketConfig& socket_config) {
+    inline void create_socket(const SocketConfig& socket_config) {
         const auto ip = socket_config.ip.empty() ? get_iface_ip(socket_config.iface) : socket_config.ip;
         addrinfo hints = get_hints(socket_config);
         addrinfo* sa_list{nullptr};

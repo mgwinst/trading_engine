@@ -15,9 +15,9 @@
 #include <cstring>
 #include <format>
 #include <print>
-#include <optional>
+#include <expected>
 
-#include "common/macros.h"
+#include "common/macros.hpp"
 
 namespace network {
 
@@ -40,11 +40,7 @@ namespace network {
         return std::string{buffer};
     }
 
-    enum class TransportLayerProtocol : uint8_t {
-        NONE = 0,
-        TCP = 1,
-        UDP = 2
-    };
+    enum struct TransportLayerProtocol { TCP, UDP };
 
     struct SocketConfig {
         std::string ip{};
@@ -54,23 +50,28 @@ namespace network {
         bool is_listening{false};
 
         auto to_string() const {
-            return std::format("<Socket Configuration: (interface=[{}], ip address=[{}], port number=[{}], protocol=[{}], listening=[{}])>",
+            return std::format("<Socket Configuration: (Interface=[{}], IP address=[{}], Port=[{}], Protocol=[{}], Listening=[{}])>",
                 iface, ip, port, (protocol == TransportLayerProtocol::TCP ? "TCP" : "UDP"), is_listening);
         }
     };
 
+    enum struct SocketConfigError { Invalid_Port, Interface_IP_Not_Found };
+
     struct SocketConfigFactory {
-        static std::optional<SocketConfig> create_from_ip(const std::string& ip, int32_t port, TransportLayerProtocol proto, bool is_listening) {
-            if (port <= 0 || port > 65535) return std::nullopt;
-            if (ip.empty()) return std::nullopt;
+        static std::expected<SocketConfig, SocketConfigError> from_ip(const std::string& ip, int32_t port, TransportLayerProtocol proto, bool is_listening) {
+            if (port < 1024 || port > 65535)
+                return std::unexpected{SocketConfigError::Invalid_Port};
+
             return SocketConfig{ip, "", port, proto, is_listening};
         }
 
-        static std::optional<SocketConfig> create_from_interface(const std::string& iface, int32_t port, TransportLayerProtocol proto, bool is_listening) {
-            if (port <= 0 || port > 65535) return std::nullopt;
+        static std::expected<SocketConfig, SocketConfigError> from_interface(const std::string& iface, int32_t port, TransportLayerProtocol proto, bool is_listening) {
+            if (port < 1024 || port > 65535)
+                return std::unexpected{SocketConfigError::Invalid_Port};
 
             const auto ip = get_iface_ip(iface);
-            if (ip.empty()) return std::nullopt;
+            if (ip.empty())
+                return std::unexpected{SocketConfigError::Interface_IP_Not_Found};
 
             return SocketConfig{ip, iface, port, proto, is_listening};
         }
@@ -115,8 +116,9 @@ namespace network {
         addrinfo* sa_list{nullptr};
         const auto ret = getaddrinfo(socket_config.ip.c_str(), std::to_string(socket_config.port).c_str(), &hints, &sa_list);
         common::ASSERT(ret == 0, std::format("getaddrinfo() failed. error: {}, errno: {}", gai_strerror(ret), strerror(errno)));
-        if (ret == 0) return std::nullopt;       
+        if (ret == 0) return std::nullopt;
 
+        return Socket{};
     }
 
 

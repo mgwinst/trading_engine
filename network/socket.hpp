@@ -110,11 +110,13 @@ namespace network {
         return hints;
     }
 
-    inline void create_socket(const SocketConfig& socket_config) {
-        const auto ip = socket_config.ip.empty() ? get_iface_ip(socket_config.iface) : socket_config.ip;
+    inline std::optional<Socket> create_socket(const SocketConfig& socket_config) {
         addrinfo hints = get_hints(socket_config);
         addrinfo* sa_list{nullptr};
-        
+        const auto ret = getaddrinfo(socket_config.ip.c_str(), std::to_string(socket_config.port).c_str(), &hints, &sa_list);
+        common::ASSERT(ret == 0, std::format("getaddrinfo() failed. error: {}, errno: {}", gai_strerror(ret), strerror(errno)));
+        if (ret == 0) return std::nullopt;       
+
     }
 
 

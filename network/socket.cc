@@ -1,10 +1,25 @@
-#include "tcp_socket.h"
+#include "socket.h"
 
 using namespace network;
 
-Socket::Socket(const SocketConfig& socket_config) {}
-Socket::Socket(Socket&& socket) {}
-Socket& Socket::operator=(Socket&& socket) {}
+Socket::Socket(int32_t fd) noexcept : _fd{fd} {}
+
+Socket::Socket(Socket&& socket) {
+    if (this != &socket) {
+        _fd = socket._fd;
+        socket._fd = -1;
+    }
+}
+
+Socket& Socket::operator=(Socket&& socket) {
+    if (this != &socket) {
+        if (_fd != -1) close(_fd);
+        _fd = socket._fd;
+        socket._fd = -1;
+    }
+    return *this;
+}
+
 Socket::~Socket() { close(_fd); }
 
 bool Socket::set_non_blocking() {
@@ -42,6 +57,15 @@ bool Socket::join_mcast(const std::string& ip) {
     return (setsockopt(_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != -1);
 }
 
+auto Socket::get_fd() const { 
+    return _fd;
+}
+
+auto Socket::release_fd() {
+    auto old_fd = _fd;
+    _fd = -1;
+    return old_fd;
+}
 
 
 

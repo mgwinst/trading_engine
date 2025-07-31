@@ -1,7 +1,10 @@
-#include "common/macros.h"
-#include "network/tcp_socket.h"
+#include <iostream>
+#include <fcntl.h>
+#include <cstring>
+
+#include "common/macros.hpp"
+#include "network/socket.hpp"
 
 int main() {
 
-    return 0;
 }

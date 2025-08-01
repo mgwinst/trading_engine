@@ -24,19 +24,18 @@ namespace network::utilities
         char buffer[NI_MAXHOST] = {'\0'};
         ifaddrs* ifaddr = nullptr;
         
-        if (getifaddrs(&ifaddr) != -1) {
-            for (ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-                if (!ifa->ifa_addr || interface != ifa->ifa_name)
-                    continue;
-
-                if (ifa->ifa_addr->sa_family == AF_INET) {
-                    if (getnameinfo(ifa->ifa_addr, sizeof(sockaddr_in), buffer, sizeof(buffer), nullptr, 0, NI_NUMERICHOST) == 0)
-                        break;
-                } else if (ifa->ifa_addr->sa_family == AF_INET6) {
-                    if (getnameinfo(ifa->ifa_addr, sizeof(sockaddr_in6), buffer, sizeof(buffer), nullptr, 0, NI_NUMERICHOST) == 0)
-                        break;
+        if (getifaddrs(&ifaddr) == -1) {
+            return "";
+        }
+        
+        ifaddrs* ifa = ifaddr;
+        while (ifa) {
+            if (ifa->ifa_addr && interface == ifa->ifa_name && ifa->ifa_addr->sa_family == AF_INET) {
+                if (getnameinfo(ifa->ifa_addr, sizeof(sockaddr_in), buffer, sizeof(buffer), nullptr, 0, NI_NUMERICHOST) == 0) {
+                    break;
                 }
             }
+            ifa = ifa->ifa_next;
         }
 
         freeifaddrs(ifaddr);

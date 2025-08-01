@@ -3,6 +3,7 @@
 #include <concepts>
 
 #include "socket_utils.hpp"
+#include "socket_config.hpp"
 
 namespace network::utilities 
 {
@@ -26,13 +27,14 @@ namespace network::utilities
         void connect(std::string_view ip, std::string_view interface, int32_t port, bool is_listening) 
         {
             const SocketConfig<T> socket_config{ip, interface, port, is_listening};
-
+            socket_fd_ = create_socket(socket_config);
+            
+            
         }
 
         void connect(std::string_view interface, int32_t port, bool is_listening) 
         {
             const SocketConfig<T> socket_config{interface, port, is_listening};
-            
         }
 
     private:

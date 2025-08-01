@@ -37,8 +37,8 @@ namespace network::utilities
         addrinfo get_hints() const noexcept
         {
             addrinfo hints{}; 
-            hints.ai_family = AF_UNSPEC;
-            hints.ai_flags = (socket_config.is_listening_ ? AI_PASSIVE : 0) | AI_NUMERICHOST | AI_NUMERICSERV;
+            hints.ai_family = AF_INET;
+            hints.ai_flags = (is_listening_ ? AI_PASSIVE : 0) | AI_NUMERICHOST | AI_NUMERICSERV;
 
             if constexpr (std::is_same_v<T, TCP>) {
                 hints.ai_socktype = SOCK_STREAM;
@@ -64,16 +64,8 @@ namespace network::utilities
 
     constexpr int32_t max_tcp_server_backlog = 1024;
 
-
-    struct SocketError
-    {
-        std::string message;
-        std::error_code error;
-        
-    };
-
     template <typename T>
-    inline std::expected<int32_t, SocketError> create_socket(const SocketConfig<T>& socket_config)
+    inline int32_t create_socket(const SocketConfig<T>& socket_config)
     {
         addrinfo hints = socket_config.get_hints();
         addrinfo* result_sa_list{nullptr};

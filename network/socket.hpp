@@ -42,7 +42,7 @@ namespace network::utilities
         return 0;
     }
 
-    inline int32_t set_so_time_stamp(int32_t fd) noexcept
+    inline int32_t set_software_timestamp(int32_t fd) noexcept
     {
         int32_t flag = 1;
         if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &flag, sizeof(flag)) == -1)
@@ -88,6 +88,8 @@ namespace network::utilities
         int32_t port_{-1};
         TransportLayerProtocol protocol_;
         bool is_listening_{false};
+        int32_t userspace_buffer_size{1<<20};
+        int32_t kernel_buffer_size_{1<<12};
 
         auto to_string() const {
             return std::format("<Socket Configuration: (Interface=[{}], IP address=[{}], Port=[{}], Protocol=[{}], Listening=[{}])>",
@@ -166,6 +168,9 @@ namespace network::utilities
 
             macros::ASSERT(set_non_blocking(socket_fd) != -1,
                 std::format("{} [set_non_blocking() failed] error: {} [{}] ", macros::SOURCE_LOCATION(), std::strerror(errno), errno));
+
+            macros::ASSERT(set_software_timestamp(socket_fd) != -1,
+                std::format("{} [set_software_timestamp() failed] error: {} [{}] ", macros::SOURCE_LOCATION(), std::strerror(errno), errno));
             
             if (socket_config.protocol_ == TransportLayerProtocol::UDP) {
                 macros::ASSERT(disable_nagle(socket_fd) != -1, 
@@ -189,9 +194,6 @@ namespace network::utilities
                 macros::ASSERT(listen(socket_fd, max_tcp_server_backlog) != -1, 
                     std::format("{} [bind() failed] error: {} [{}] ", macros::SOURCE_LOCATION(), std::strerror(errno), errno));
             }
-
-            macros::ASSERT(set_so_time_stamp(socket_fd) != -1,
-                std::format("{} [set_so_time_stamp() failed] error: {} [{}] ", macros::SOURCE_LOCATION(), std::strerror(errno), errno));
         }
         
         return Socket{socket_fd};

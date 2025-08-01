@@ -2,14 +2,13 @@
 
 using namespace network::utilities;
 
+Socket::Socket() noexcept : fd_{-1} {}
+
 Socket::Socket(int32_t fd) noexcept : fd_{fd} {}
 
-Socket::Socket(Socket&& socket) noexcept
+Socket::Socket(Socket&& socket) noexcept : fd_{socket.fd_}
 {
-    if (this != &socket) {
-        fd_ = socket.fd_;
-        socket.fd_ = -1;
-    }
+    socket.fd_ = -1;
 }
 
 Socket& Socket::operator=(Socket&& socket) noexcept

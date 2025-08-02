@@ -1,8 +1,9 @@
 #pragma once
 
-#include <print>
 #include <source_location>
 #include <string_view>
+#include <iostream>
+#include <print>
 
 namespace macros 
 {   
@@ -14,8 +15,17 @@ namespace macros
     inline auto ASSERT(bool cond, const std::string_view message) noexcept 
     {
         if (!cond) [[unlikely]] {
-            std::println("{}", message);
+            std::println(std::cerr, "{} | {} | error: {} [{}]", macros::SOURCE_LOCATION(), message, std::strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
     }
+
+    // "message" -> function that failed
+    // internally handles errno
+    void LOG_ERROR(std::string_view message) noexcept
+    {
+        std::println(std::cerr, "{} | {} | error: {} [{}]", macros::SOURCE_LOCATION(), message, std::strerror(errno), errno);
+    }
+
+    
 }

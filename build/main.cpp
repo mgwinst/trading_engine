@@ -1,5 +1,5 @@
 #include "common/macros.hpp"
-#include "Socket.hpp"
+#include "network/socket.hpp"
 
 using namespace network::utilities;
 

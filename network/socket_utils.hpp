@@ -19,7 +19,7 @@
 
 namespace network::utilities
 {
-    inline std::string get_interface_ip(const std::string_view interface) 
+    inline auto get_interface_ip(const std::string_view interface) noexcept -> std::string
     {
         char buffer[NI_MAXHOST] = {'\0'};
         ifaddrs* ifaddr = nullptr;
@@ -42,7 +42,7 @@ namespace network::utilities
         return std::string{buffer};
     }
 
-    inline int32_t set_non_blocking(int32_t fd) noexcept
+    inline auto set_non_blocking(int32_t fd) noexcept -> int32_t
     {
         const auto flags = fcntl(fd, F_GETFL, 0); // this returns the flags associated with fd currently
         if (flags & O_NONBLOCK) 
@@ -53,7 +53,7 @@ namespace network::utilities
     }
 
     // implicit reinterpret_cast<void*> when passing to const void* optval in C++
-    inline int32_t disable_nagle(int32_t fd) noexcept
+    inline auto disable_nagle(int32_t fd) noexcept -> int32_t
     {
         int32_t flag = 1;
         if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) == -1)
@@ -61,7 +61,7 @@ namespace network::utilities
         return 0;
     }
 
-    inline int32_t set_software_timestamp(int32_t fd) noexcept
+    inline auto set_software_timestamp(int32_t fd) noexcept -> int32_t
     {
         int32_t flag = 1;
         if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &flag, sizeof(flag)) == -1)
@@ -69,26 +69,26 @@ namespace network::utilities
         return 0;
     }
 
-    inline bool would_block() noexcept
+    inline auto would_block() noexcept -> bool
     {
         return (errno == EWOULDBLOCK || errno == EINPROGRESS);
     }
 
-    inline int32_t set_unicast_ttl(int32_t fd, int32_t ttl) noexcept
+    inline auto set_unicast_ttl(int32_t fd, int32_t ttl) noexcept -> int32_t
     {
         if (setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
             return -1;
         return 0;
     }
 
-    inline int32_t set_mcast_ttl(int32_t fd, int32_t ttl) noexcept
+    inline auto set_mcast_ttl(int32_t fd, int32_t ttl) noexcept -> int32_t
     {
         if (setsockopt(fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) == -1)
             return -1;
         return 0;
     }
 
-    inline int32_t join_mcast(int32_t fd, const std::string &ip) noexcept
+    inline auto join_mcast(int32_t fd, const std::string &ip) noexcept -> int32_t
     {
         const ip_mreq mreq{{inet_addr(ip.c_str())}, {htonl(INADDR_ANY)}};
         if (setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) == -1)

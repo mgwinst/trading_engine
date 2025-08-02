@@ -67,8 +67,8 @@ namespace network::utilities
         int32_t flag{1};
 
         addrinfo* res = result_sa_list;
-        while (addrinfo* res = result_sa_list; res != nullptr; res = res->ai_next) {
-            if (socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol) == -1) {
+        for (addrinfo* res = result_sa_list; res != nullptr; res = res->ai_next) {
+            if ((socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) {
                 common::log_error("socket() failed");
                 close(socket_fd);
                 continue;
@@ -123,11 +123,11 @@ namespace network::utilities
                 }
             }
 
-            ::freeaddrinfo(result_sa_list);
+            freeaddrinfo(result_sa_list);
             return socket_fd;
         }
 
-        ::freeaddrinfo(result_sa_list);
+        freeaddrinfo(result_sa_list);
         return -1;
     }
 

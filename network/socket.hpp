@@ -8,9 +8,6 @@
 
 namespace network::utilities 
 {
-    struct TCP {};
-    struct UDP {};
-
     template <typename T>
     concept is_protocol = std::is_same_v<T, UDP> || std::is_same_v<T, TCP>;
 

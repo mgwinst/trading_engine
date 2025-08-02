@@ -1,6 +1,7 @@
 #pragma once
 
 #include <source_location>
+#include <cstring>
 #include <string_view>
 #include <iostream>
 #include <print>

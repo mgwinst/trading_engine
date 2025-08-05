@@ -19,8 +19,8 @@ namespace network::utilities
         int32_t port_{-1};
         bool is_listening_{false};
 
-        SocketConfig(std::string_view ip, std::string_view interface, int32_t port, bool is_listening) :
-            ip_{ip}, interface_{interface}, port_{port}, is_listening_{is_listening} {}
+        SocketConfig(std::string_view ip, int32_t port, bool is_listening) :
+            ip_{ip}, port_{port}, is_listening_{is_listening} {}
             
 
         SocketConfig(std::string_view interface, int32_t port, bool is_listening) {
@@ -30,7 +30,6 @@ namespace network::utilities
             port_ = port;
             is_listening_ = is_listening;
         }
-
 
         auto get_hints() const noexcept -> addrinfo
         {
@@ -71,26 +70,26 @@ namespace network::utilities
 
         addrinfo* res = result_sa_list;
         for (addrinfo* res = result_sa_list; res != nullptr; res = res->ai_next) {
-            if ((socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) {
+            if ((socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) [[unlikely]] {
                 macros::LOG_ERROR("socket() failed");
                 close(socket_fd);
                 continue;
             }
 
-            if (set_non_blocking(socket_fd) == -1) {
+            if (set_non_blocking(socket_fd) == -1) [[unlikely]] {
                 macros::LOG_ERROR("set_non_blocking() failed");
                 close(socket_fd);
                 continue;
             }
 
-            if (set_software_timestamp(socket_fd) == -1) {
+            if (set_software_timestamp(socket_fd) == -1) [[unlikely]] {
                 macros::LOG_ERROR("set_software_timestamp() failed");
                 close(socket_fd);
                 continue;
             }
 
             if constexpr (std::is_same_v<T, TCP>) {
-                if (disable_nagle(socket_fd) == -1) {
+                if (disable_nagle(socket_fd) == -1) [[unlikely]] {
                     macros::LOG_ERROR("disable_nagle() failed");
                     close(socket_fd);
                     continue;
@@ -98,7 +97,7 @@ namespace network::utilities
             }
 
             if (!socket_config.is_listening_) {
-                if (connect(socket_fd, res->ai_addr, res->ai_addrlen) == -1) {
+                if (connect(socket_fd, res->ai_addr, res->ai_addrlen) == -1) [[unlikely]] {
                     macros::LOG_ERROR("connect() failed");
                     close(socket_fd);
                     continue;
@@ -106,13 +105,13 @@ namespace network::utilities
             }
 
             if constexpr (socket_config.is_listening_) {
-                if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) {
+                if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) [[unlikely]] {
                     macros::LOG_ERROR("setsockopt() failed");
                     close(socket_fd);
                     continue;
                 }
 
-                if (bind(socket_fd, res->ai_addr, res->ai_addrlen) == -1) {
+                if (bind(socket_fd, res->ai_addr, res->ai_addrlen) == -1) [[unlikely]] {
                     macros::LOG_ERROR("bind() failed");
                     close(socket_fd);
                     continue;
@@ -120,7 +119,7 @@ namespace network::utilities
             }
 
             if constexpr (std::is_same_v<T, TCP> || socket_config.is_listening_) {
-                if (listen(socket_fd, max_tcp_server_backlog) == -1) {
+                if (listen(socket_fd, max_tcp_server_backlog) == -1) [[unlikely]] {
                     macros::LOG_ERROR("listen() failed");
                     close(socket_fd);
                     continue;

@@ -69,6 +69,8 @@ namespace network::utilities
         return 0;
     }
 
+    // inline auto set_hardware_timestamp(int32_t fd) noexcept -> int32_t
+
     inline auto would_block() noexcept -> bool
     {
         return (errno == EWOULDBLOCK || errno == EINPROGRESS);

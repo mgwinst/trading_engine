@@ -14,27 +14,30 @@ namespace macros
         return std::format("{}:{}:{}: {}", location.file_name(), location.line(), location.column(), location.function_name());
     }
 
-    inline auto ASSERT(bool cond, const std::string_view message) noexcept 
+    inline auto ASSERT(bool cond, std::string_view message, std::string_view location) noexcept 
     {
         if (!cond) [[unlikely]] {
-            std::println(std::cerr, "{} | {} | error: {} [{}]", macros::SOURCE_LOCATION(), message, std::strerror(errno), errno);
+            std::println(std::cerr, "{} | error: {}", location, message);
             exit(EXIT_FAILURE);
         }
     }
 
-    // "message" -> function that failed
-    // internally handles errno
-    void LOG_ERROR(std::string_view message) noexcept
+    inline auto ASSERT(bool cond, std::string_view message, std::string_view location, int error) noexcept 
     {
-        std::println(std::cerr, "{} | {} | error: {} [{}]", macros::SOURCE_LOCATION(), message, std::strerror(errno), errno);
+        if (!cond) [[unlikely]] {
+            std::println(std::cerr, "{} | {} | error: {} [{}]", location, message, std::strerror(error), error);
+            exit(EXIT_FAILURE);
+        }
     }
 
-    template <typename T>
-    inline auto CURRENT_TIME(std::string& time_str) noexcept -> std::string&
+    inline void LOG_ERROR(std::string_view message, std::string_view location) noexcept
     {
-        auto time_in_nanos = std::chrono::duration_cast<T>(std::chrono::high_resolution_clock()::now().time_since_epoch()).count();
-        time_str = std::to_string(time_in_nanos);
-        return time_str;
+        std::println(std::cerr, "{} | error: {}", location, message);
+    }
+
+    inline void LOG_ERROR(std::string_view message, std::string_view location, int error) noexcept
+    {
+        std::println(std::cerr, "{} | {} | error: {} [{}]", location, message, std::strerror(error), error);
     }
     
 }

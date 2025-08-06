@@ -10,8 +10,8 @@
 
 namespace network::utilities 
 {
-    constexpr std::size_t kbuffer_len{1<<12};
-    constexpr std::size_t ubuffer_len{1<<20};
+    constexpr std::size_t kbuf_len{1<<12};
+    constexpr std::size_t ubuf_len{1<<20};
 
     template <typename T>
     concept is_protocol = std::is_same_v<T, UDP> || std::is_same_v<T, TCP>;
@@ -27,10 +27,10 @@ namespace network::utilities
         int32_t read_index_{0};
         struct sockaddr_in socket_attributes_{};
 
-        Socket() noexcept : 
+        Socket() noexcept
         {
-            send_buffer_.resize(ubuffer_len);
-            recv_buffer_.resize(ubuffer_len);
+            send_buffer_.resize(ubuf_len);
+            recv_buffer_.resize(ubuf_len);
         }
 
         Socket(const Socket&) = delete;
@@ -38,10 +38,10 @@ namespace network::utilities
         Socket &operator=(const Socket&) = delete;
         Socket &operator=(const Socket&&) = delete;
 
-        auto connect(std::string_view ip, std::string_view interface, int32_t port, bool is_listening) -> void
+        auto connect(std::string_view ip, std::string_view interface, int32_t port, Listening listening, Blocking blocking) -> int32_t
         {
-            const SocketConfig<T> socket_config{ip, interface, port, is_listening};
-            socket_fd_ = create_socket(socket_config);
+            const SocketConfig<T> socket_config{ip, interface, port, listening, blocking};
+            socket_fd_ = create_and_set_socket(socket_config);
             
             socket_attributes_.sin_addr.s_addr = INADDR_ANY;
             socket_attributes_.sin_family = AF_INET;
@@ -50,24 +50,14 @@ namespace network::utilities
             return socket_fd_;
         }
 
-        auto connect(std::string_view interface, int32_t port, bool is_listening) -> void
+
+        auto send_and_recv() noexcept -> bool 
         {
-            const SocketConfig<T> socket_config{ip, port, is_listening};
-            socket_fd_ = create_socket(socket_config);
-            
-            socket_attributes_.sin_addr.s_addr = INADDR_ANY;
-            socket_attributes_.sin_port = htons(port);
-            socket_attributes_.sin_family = AF_INET;
+            char ctrl_buf[CMSG_SPACE(sizeof(struct timeval))];
+            auto cmsg = reinterpret_cast<struct cmsghdr *>(&ctrl_buf);
 
-            return socket_fd_;
-        }
-
-        auto send_and_recv() noexcept -> bool {
-            char ctrl[CMSG_SPACE(sizeof(struct timeval))];
-            auto cmsg = reinterpret_cast<struct cmsghdr *>(&ctrl);
-
-            iovec iov{recv_buffer_.data() + read_index_, ubuffer_len - read_index_};
-            msghdr msg{&socket_attributes_, sizeof(socket_attributes_), &iov, 1, &ctrl, sizeof(ctrl), 0};
+            iovec iov{recv_buffer_.data() + read_index_, ubuf_len - read_index_};
+            msghdr msg{&socket_attributes_, sizeof(socket_attributes_), &iov, 1, &ctrl_buf, sizeof(ctrl_buf), 0};
 
             const auto read_len = recvmsg(socket_fd_, &msg, MSG_DONTWAIT);
             if (read_len > 0) {
@@ -78,7 +68,7 @@ namespace network::utilities
                 if (cmsg->cmsg_level == SOL_SOCKET &&
                     cmsg->cmsg_type == SCM_TIMESTAMP &&
                     cmsg->cmsg_len == CMSG_LEN(sizeof(time_kernel))) {
-                        std::memcpy(&time_kernel, CMSG_DATA(cmsg), sizeof(time_kernel))
+                        std::memcpy(&time_kernel, CMSG_DATA(cmsg), sizeof(time_kernel));
                         kernel_time = time_kernel.tv_sec * 1e9 + time_kernel.tv_usec * 1e3;
                     }
                 
@@ -86,13 +76,14 @@ namespace network::utilities
             }
 
             if (write_index_ > 0)
-                const auto n = ::send(socket_fd, send_buffer_.data(), write_index_, MSG_DONTWAIT | MSG_NOSIGNAL);
+                const auto n = ::send(socket_fd_, send_buffer_.data(), write_index_, MSG_DONTWAIT | MSG_NOSIGNAL);
             write_index_ = 0;
 
             return (read_len > 0);
         }
 
-        auto send(std::span<const std::byte> buffer) noexcept -> int32_t {
+        auto send(std::span<const std::byte> buffer) noexcept -> int32_t 
+        {
             if (write_index_ + buffer.size() > send_buffer_.size())
                 return -1; // handle this error
             std::memcpy(send_buffer_.data() + write_index_, buffer.data(), buffer.size());

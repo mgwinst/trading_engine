@@ -1,6 +1,10 @@
 #include "common/macros.hpp"
 #include "network/socket.hpp"
 
-int main() {
+using namespace network::utilities;
 
+
+int main() {
+    test();
 }
+

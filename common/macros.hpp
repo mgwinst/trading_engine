@@ -39,5 +39,4 @@ namespace macros
     {
         std::println(std::cerr, "{} | {} | error: {} [{}]", location, message, std::strerror(error), error);
     }
-    
 }

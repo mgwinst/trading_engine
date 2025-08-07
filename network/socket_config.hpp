@@ -134,8 +134,14 @@ namespace network::utilities
                     if (FD_ISSET(socket_fd, &write_fds)) {
                         int error = 0;
                         socklen_t error_len = sizeof(error);
-                        if (setsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, error_len) == -1) {
-                            macros::LOG_ERROR("setsockopt() failed", macros::SOURCE_LOCATION(), errno);
+                        if (getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, &error_len) == -1) {
+                            macros::LOG_ERROR("getsockopt() failed", macros::SOURCE_LOCATION(), errno);
+                            close(socket_fd);
+                            continue;
+                        }
+
+                        if (error != 0) {
+                            macros::LOG_ERROR("connect() failed", macros::SOURCE_LOCATION(), error);
                             close(socket_fd);
                             continue;
                         }
@@ -157,7 +163,7 @@ namespace network::utilities
                 }
             }
 
-            if (std::is_same_v<T, TCP> || socket_config.listening_ == Listening::YES) {
+            if (std::is_same_v<T, TCP> && socket_config.listening_ == Listening::YES) {
                 if (listen(socket_fd, MAX_TCP_SERVER_BACKLOG) == -1) {
                     macros::LOG_ERROR("listen() failed", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);

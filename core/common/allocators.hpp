@@ -11,21 +11,21 @@ struct PageAlignedAllocator {
 
     PageAlignedAllocator() noexcept = default;
     PageAlignedAllocator(const PageAlignedAllocator&) noexcept = default;
-    PageAlignedAllocator operator=(const PageAlignedAllocator&) noexcept = default;
-    PageAlignedAllocator(const PageAlignedAllocator&) noexcept = default;
-    PageAlignedAllocator operator=(const PageAlignedAllocator&) noexcept = default;
+    PageAlignedAllocator& operator=(const PageAlignedAllocator&) noexcept = default;
+    PageAlignedAllocator(PageAlignedAllocator&&) noexcept = default;
+    PageAlignedAllocator& operator=(PageAlignedAllocator&&) noexcept = default;
 
     template <typename U>
     struct rebind 
     {
         using other = PageAlignedAllocator<U>;
-    }
+    };
 
     auto allocate(std::size_t n) -> T* 
     {
         if (n < 0 || n > max_size()) throw std::bad_array_new_length{};
         std::size_t page_size = getpagesize();
-        T* ptr = std::static_cast<T*>(std::aligned_alloc(page_size, n * sizeof(T)));
+        T* ptr = static_cast<T*>(std::aligned_alloc(page_size, n * sizeof(T)));
         if (!ptr) throw std::bad_alloc{};
         return ptr;
     }

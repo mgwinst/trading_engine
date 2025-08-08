@@ -21,7 +21,7 @@ struct PageAlignedAllocator {
         using other = PageAlignedAllocator<U>;
     };
 
-    auto allocate(std::size_t n) -> T* 
+    [[nodiscard]] auto allocate(std::size_t n) -> T* 
     {
         if (n < 0 || n > max_size()) throw std::bad_array_new_length{};
         std::size_t page_size = getpagesize();
@@ -30,7 +30,7 @@ struct PageAlignedAllocator {
         return ptr;
     }
 
-    auto deallocate(T* ptr, std::size_t n) -> void
+    auto deallocate(T* ptr, std::size_t n) noexcept -> void
     {
         std::free(ptr);
     }

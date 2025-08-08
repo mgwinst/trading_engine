@@ -1,17 +1,17 @@
-#include <thread>
+#include "../core/sys/memory.hpp"
+#include "../core/common/macros.hpp"
 
-#include "common/macros.hpp"
-#include "network/socket.hpp"
+int main() 
+{
+    std::vector<std::byte> buffer;
+    buffer.reserve(1024);
 
-using namespace network::utilities;
+    macros::ASSERT(pin_buffer(buffer) != -1, "pin_buffer() failed", macros::SOURCE_LOCATION(), errno);
+    macros::ASSERT(unpin_buffer(buffer) != -1, "unpin_buffer() failed", macros::SOURCE_LOCATION(), errno);
 
-void test() {
-    Socket<TCP> client_socket, server_socket;
-    server_socket.connect("", "lo", 3001, Listening::YES, Blocking::NO);
-    client_socket.connect("", "lo", 3001, Listening::NO, Blocking::NO);
-}
+    
 
-int main() {
 
+    return 0;
 }
 

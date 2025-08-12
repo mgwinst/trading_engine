@@ -14,12 +14,15 @@
 #include <format>
 #include <string>
 #include <cstring>
+#include <string_view>
 
 #include "common/macros.hpp"
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
 
 namespace network::utilities
 {
-    inline auto get_interface_ip(const std::string_view interface) noexcept -> std::string
+    inline auto get_interface_ip(std::string_view interface) noexcept -> std::string
     {
         char buffer[NI_MAXHOST] = {'\0'};
         ifaddrs* ifaddr = nullptr;
@@ -97,4 +100,57 @@ namespace network::utilities
             return -1;
         return 0;
     }
+
+    inline auto configure_tpacket_v3(int32_t fd) -> int32_t
+    {
+        int version = TPACKET_V3;
+        if (setsockopt(fd, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) == -1)
+            return -1;
+        return 0;
+    }
+
+    inline auto create_tpacket_req(int32_t block_size, int32_t num_blocks, int32_t timeout) -> tpacket_req3
+    {
+        tpacket_req3 req{};
+        req.tp_block_size = block_size;
+        req.tp_block_nr = num_blocks;
+        req.tp_frame_size = 2048; // ignored in v3
+        req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr) / req.tp_frame_size; // ignored in v3
+        req.tp_retire_blk_tov = timeout;    // partially filled block is returned to user space (retirement timeout (60ms))
+        req.tp_sizeof_priv = 0;        // no private data
+        req.tp_feature_req_word = 0;   // no special features
+
+        macros::ASSERT(req.tp_block_size % getpagesize() == 0, 
+            "Block size must be multipleof page size", macros::SOURCE_LOCATION());
+
+        return req;
+    }
+
+    inline auto configure_tpacket_v3_rx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
+    {
+        if (setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &req, sizeof(req)) == -1)
+            return -1;
+        return 0;
+    }
+
+    inline auto configure_tpacket_v3_tx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
+    {
+        if (setsockopt(fd, SOL_PACKET, PACKET_TX_RING, &req, sizeof(req)) == -1)
+            return -1;
+        return 0;
+    }
+
+    // usually passing AF_PACKET == family, ETH_P_IP == protocol
+    inline auto get_sockaddr_ll(std::string_view interface, uint16_t family, uint16_t protocol) -> sockaddr_ll
+    {
+        sockaddr_ll addr{};
+        addr.sll_family = family;
+        addr.sll_protocol = htons(protocol);
+        addr.sll_ifindex = if_nametoindex(interface.data());
+        macros::ASSERT(addr.sll_ifindex != 0, "if_nametoindex() failed", macros::SOURCE_LOCATION());
+
+        return addr;
+    }
+
+
 }

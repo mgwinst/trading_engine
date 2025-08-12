@@ -18,6 +18,4 @@ namespace common {
         char padding[56];
     };
 
-    
-
 }

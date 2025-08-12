@@ -6,7 +6,8 @@
 #include <new>
 
 template <typename T>
-struct PageAlignedAllocator {
+struct PageAlignedAllocator 
+{
     using value_type = T;
 
     PageAlignedAllocator() noexcept = default;

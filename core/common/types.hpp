@@ -12,4 +12,12 @@ namespace common {
     using Volume = uint64_t;
     using Priority = uint64_t;
 
+    alignas(64) struct ExchangeMessage
+    {
+        char symbol[8];         
+        char padding[56];
+    };
+
+    
+
 }

@@ -6,7 +6,8 @@
 #include <concepts>
 
 template <typename T>
-concept BufferType = requires(T t) {
+concept BufferType = requires(T t) 
+{
     { t.data() } -> std::convertible_to<const void*>;
     { t.capacity() } -> std::integral;
 };

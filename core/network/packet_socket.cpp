@@ -16,40 +16,28 @@
 #define UDP_HDR_OFFSET (ETHERNET_HDR_LEN + IP_HDR_LEN)
 #define PAYLOAD_OFFSET (ETHERNET_HDR_LEN + IP_HDR_LEN + UDP_HDR_LEN)
 
+namespace netutils = network::utilities;
+
 int main() 
 {
     int socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IP));
-    if (socket_fd == -1) {
-        perror("socket() failed");
-        exit(EXIT_FAILURE);
-    }
+    macros::ASSERT(socket_fd != -1, "socket() failed", macros::SOURCE_LOCATION());
 
-    macros::ASSERT(network::utilities::configure_tpacket_v3(socket_fd) != -1,
-        "configure_tpacket_v3() failed", macros::SOURCE_LOCATION());
+    macros::ASSERT(netutils::configure_tpacket_v3(socket_fd) != -1, "configure_tpacket_v3() failed", macros::SOURCE_LOCATION());
     
-    auto req = network::utilities::create_tpacket_req(4096, 8, 60);
+    auto req = netutils::create_tpacket_req(4096, 8, 60);
 
-    macros::ASSERT(network::utilities::configure_tpacket_v3_rx_buf(socket_fd, req) != -1,
-        "configure_tpacket_v3_rx_ring_buffer() failed", macros::SOURCE_LOCATION());
+    macros::ASSERT(netutils::configure_tpacket_v3_rx_buf(socket_fd, req) != -1, "configure_tpacket_v3_rx_ring_buffer() failed", macros::SOURCE_LOCATION());
     
-    auto addr = network::utilities::get_sockaddr_ll("eno1", AF_PACKET, ETH_P_IP);
+    auto addr = netutils::get_sockaddr_ll("eno1", AF_PACKET, ETH_P_IP);
 
-    if (bind(socket_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
-        perror("bind() failed");
-        close(socket_fd);
-        exit(EXIT_FAILURE);
-    }
+    macros::ASSERT(bind(socket_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) != -1, "bind() failed", macros::SOURCE_LOCATION());
 
     void* ring_buffer = mmap(nullptr, req.tp_block_size * req.tp_block_nr, PROT_READ | PROT_WRITE, MAP_SHARED, socket_fd, 0);   
-    if (ring_buffer == MAP_FAILED) {
-        perror("mmap() failed");
-        close(socket_fd);
-        exit(EXIT_FAILURE);
-    }
+    macros::ASSERT(ring_buffer != MAP_FAILED, "mmap() failed", macros::SOURCE_LOCATION());
 
-    std::print("socket ring buffer successfully mapped.\n");
+    // std::print("socket ring buffer successfully mapped.\n");
 
-    /*
     boost::lockfree::spsc_queue<char, boost::lockfree::capacity<(1<<20)>> queue;
 
     tpacket_block_desc* block = (tpacket_block_desc*)(ring_buffer);
@@ -80,7 +68,6 @@ int main()
             block_idx = (block_idx + 1) % req.tp_block_nr;
         }
     }
-    */
 
     munmap(ring_buffer, req.tp_block_size * req.tp_block_nr);
     close(socket_fd);

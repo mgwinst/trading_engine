@@ -25,7 +25,7 @@ int main()
 
     macros::ASSERT(netutils::configure_tpacket_v3(socket_fd) != -1, "configure_tpacket_v3() failed", macros::SOURCE_LOCATION());
     
-    auto req = netutils::create_tpacket_req(4096, 8, 60);
+    auto req = netutils::create_tpacket_req(1<<22, 8, 60);
 
     macros::ASSERT(netutils::configure_tpacket_v3_rx_buf(socket_fd, req) != -1, "configure_tpacket_v3_rx_ring_buffer() failed", macros::SOURCE_LOCATION());
     

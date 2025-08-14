@@ -147,6 +147,7 @@ namespace network::utilities
         addr.sll_family = family;
         addr.sll_protocol = htons(protocol);
         addr.sll_ifindex = if_nametoindex(interface.data());
+        addr.sll_pkttype = PACKET_HOST | PACKET_MULTICAST;
         macros::ASSERT(addr.sll_ifindex != 0, "if_nametoindex() failed", macros::SOURCE_LOCATION());
 
         return addr;

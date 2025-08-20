@@ -8,6 +8,7 @@
 #include "common/allocators.hpp"
 #include "common/macros.hpp"
 #include "sys/memory.hpp"
+#include <net/if.h>
 
 using namespace macros;
 
@@ -19,6 +20,7 @@ namespace {
 }
 
 int main() {
+    // should we just allocate using mmap() mmap_anon...?
     std::vector<std::byte, PageAlignedAllocator<std::byte>> umem;
     umem.resize(umem_len);
 
@@ -72,5 +74,17 @@ int main() {
     xdp_desc* tx_ring = (xdp_desc*)((char*)tx_ring_mmap + offsets.tx.desc);
     xdp_desc* fill_ring = (xdp_desc*)((char*)fill_ring_mmap + offsets.fr.desc);
     xdp_desc* completion_ring = (xdp_desc*)((char*)completion_ring_mmap + offsets.cr.desc);
+
+    sockaddr_xdp sockaddr {
+        .sxdp_family = AF_XDP,
+        .sxdp_flags = 0,
+        .sxdp_ifindex = if_nametoindex("eno1"),
+        .sxdp_queue_id = 0,
+        .sxdp_shared_umem_fd = static_cast<uint32_t>(fd)
+    };
+
+    macros::ASSERT(bind(fd, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_xdp)) != -1, "bind() failed", SOURCE_LOCATION(), errno);
+    
+    
     
 }

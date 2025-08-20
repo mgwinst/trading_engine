@@ -101,7 +101,7 @@ namespace network::utilities
         return 0;
     }
 
-    inline auto configure_tpacket_v3(int32_t fd) -> int32_t
+    inline auto set_packet_capture_version(int32_t fd) noexcept -> int32_t
     {
         int version = TPACKET_V3;
         if (setsockopt(fd, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) == -1)
@@ -109,31 +109,14 @@ namespace network::utilities
         return 0;
     }
 
-    inline auto create_tpacket_req(int32_t block_size, int32_t num_blocks, int32_t timeout) -> tpacket_req3
-    {
-        tpacket_req3 req{};
-        req.tp_block_size = block_size;
-        req.tp_block_nr = num_blocks;
-        req.tp_frame_size = 2048; // ignored in v3
-        req.tp_frame_nr = (req.tp_block_size * req.tp_block_nr) / req.tp_frame_size; // ignored in v3
-        req.tp_retire_blk_tov = timeout;    // partially filled block is returned to user space (retirement timeout (60ms))
-        req.tp_sizeof_priv = 0;        // no private data
-        req.tp_feature_req_word = 0;   // no special features
-
-        macros::ASSERT(req.tp_block_size % getpagesize() == 0, 
-            "Block size must be multipleof page size", macros::SOURCE_LOCATION());
-
-        return req;
-    }
-
-    inline auto configure_tpacket_v3_rx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
+    inline auto configure_tpacket_rx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
     {
         if (setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &req, sizeof(req)) == -1)
             return -1;
         return 0;
     }
 
-    inline auto configure_tpacket_v3_tx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
+    inline auto configure_tpacket_tx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
     {
         if (setsockopt(fd, SOL_PACKET, PACKET_TX_RING, &req, sizeof(req)) == -1)
             return -1;

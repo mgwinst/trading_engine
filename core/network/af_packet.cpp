@@ -16,12 +16,14 @@
 
 namespace netutils = network::utilities;
 
+// AF_XDP vs AF_PACKET
+
 int main() 
 {
     int socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     macros::ASSERT(socket_fd != -1, "socket() failed", macros::SOURCE_LOCATION());
 
-    macros::ASSERT(netutils::configure_tpacket_v3(socket_fd) != -1, "configure_tpacket_v3() failed", macros::SOURCE_LOCATION());
+    macros::ASSERT(netutils::set_packet_capture_version(socket_fd) != -1, "set_packet_capture_version() failed", macros::SOURCE_LOCATION());
     
     tpacket_req3 req{};
     req.tp_block_size = 1 << 22;
@@ -35,7 +37,7 @@ int main()
     macros::ASSERT(req.tp_block_size % getpagesize() == 0, 
         "Block size must be multipleof page size", macros::SOURCE_LOCATION());
 
-    macros::ASSERT(netutils::configure_tpacket_v3_rx_buf(socket_fd, req) != -1, "configure_tpacket_v3_rx_ring_buffer() failed", macros::SOURCE_LOCATION());
+    macros::ASSERT(netutils::configure_tpacket_rx_buf(socket_fd, req) != -1, "configure_tpacket_v3_rx_ring_buffer() failed", macros::SOURCE_LOCATION());
 
     sockaddr_ll addr{};
     addr.sll_family = AF_PACKET;
@@ -46,16 +48,15 @@ int main()
 
     macros::ASSERT(bind(socket_fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) != -1, "bind() failed", macros::SOURCE_LOCATION());
 
-    void* ring_buffer = mmap(nullptr, req.tp_block_size * req.tp_block_nr, PROT_READ | PROT_WRITE, MAP_SHARED, socket_fd, 0);   
-    macros::ASSERT(ring_buffer != MAP_FAILED, "mmap() failed", macros::SOURCE_LOCATION());
+    void* rx_buffer = mmap(nullptr, req.tp_block_size * req.tp_block_nr, PROT_READ | PROT_WRITE, MAP_SHARED, socket_fd, 0);   
+    macros::ASSERT(rx_buffer != MAP_FAILED, "mmap() failed", macros::SOURCE_LOCATION());
 
     // std::print("socket ring buffer successfully mapped.\n");
 
+    constexpr std::size_t BUFFER_SIZE{1<<20};
+    boost::lockfree::spsc_queue<char, boost::lockfree::capacity<(BUFFER_SIZE)>> queue;
 
-
-    boost::lockfree::spsc_queue<char, boost::lockfree::capacity<(1<<20)>> queue;
-
-    tpacket_block_desc* block = (tpacket_block_desc*)(ring_buffer);
+    tpacket_block_desc* block = (tpacket_block_desc*)(rx_buffer);
     int block_idx = 0;
     
     while (1) {
@@ -90,3 +91,10 @@ int main()
     return 0;
 }
 
+
+
+
+void f()
+{
+
+}

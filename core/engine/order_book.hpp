@@ -6,7 +6,7 @@
 
 namespace engine {
 
-    struct OrderBookVector {
+    struct OrderBook {
 
         using Order_ID = common::Order_ID;
         using Side = common::Side;
@@ -20,7 +20,7 @@ namespace engine {
         void add_order(Side side, Price price, Volume volume);
 
         template <typename T, typename Compare>
-        void engine::OrderBookVector::add_order(T &levels, Price price, Volume volume, Compare comp);
+        void engine::OrderBook::add_order(T &levels, Price price, Volume volume, Compare comp);
 
         std::pair<Price, Volume> get_best_prices() const;
     };

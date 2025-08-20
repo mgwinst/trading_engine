@@ -28,7 +28,7 @@ namespace network::utilities
         ifaddrs* ifaddr = nullptr;
         
         if (getifaddrs(&ifaddr) == -1) {
-            return "";
+            return std::string{};
         }
         
         ifaddrs* ifa = ifaddr;

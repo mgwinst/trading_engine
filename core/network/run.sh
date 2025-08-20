@@ -1,3 +1,3 @@
 #!/bin/bash
 
-clang++ -std=c++23 packet_socket.cpp -I../ && sudo ./a.out
+clang++ -std=c++23 af_xdp.cpp -I../ && sudo ./a.out

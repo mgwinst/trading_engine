@@ -4,7 +4,9 @@
 #include <cstdlib>
 #include <vector>
 
+#include "common/allocators.hpp"
 #include "common/macros.hpp"
+#include "sys/memory.hpp"
 
 using namespace macros;
 
@@ -15,10 +17,13 @@ namespace {
 }
 
 int main() {
-    std::vector<std::byte> umem;
+    std::vector<std::byte, PageAlignedAllocator<std::byte>> umem;
     umem.resize(umem_len);
 
-    int fd = socket(AF_XDP, SOCK_RAW, 0);
+    pin_buffer(umem);
+
+    int32_t fd = socket(AF_XDP, SOCK_RAW, 0);
+    macros::ASSERT(fd != -1, "socket() failed", SOURCE_LOCATION(), errno);
 
     xdp_umem_reg umem_reg {
         .addr = (__u64)(void*)umem.data(),
@@ -29,7 +34,8 @@ int main() {
     };
 
     macros::ASSERT(setsockopt(fd, SOL_XDP, XDP_UMEM_REG, &umem_reg, sizeof(umem_reg)) != -1,
-        "setsockopt() failed", SOURCE_LOCATION());
+        "setsockopt() failed", SOURCE_LOCATION(), errno);
+    
     
     
 }

@@ -7,7 +7,7 @@
 
 #include "common/allocators.hpp"
 #include "common/macros.hpp"
-#include "sys/memory.hpp"
+#include "common/memory.hpp"
 #include <net/if.h>
 
 using namespace macros;

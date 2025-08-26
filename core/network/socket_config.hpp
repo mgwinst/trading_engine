@@ -78,7 +78,7 @@ namespace network::utilities
         addrinfo hints = get_hints(socket_config);
         addrinfo* result_sa_list{nullptr};
         const auto status = getaddrinfo(socket_config.ip_.c_str(), std::to_string(socket_config.port_).c_str(), &hints, &result_sa_list);
-        macros::ASSERT(status != -1, std::string{"getaddrinfo() failed"} + gai_strerror(status), macros::SOURCE_LOCATION());
+        macros::ASSERT(status != -1, std::string{"getaddrinfo()"} + gai_strerror(status), macros::SOURCE_LOCATION());
         
         int32_t socket_fd{-1};
         int32_t flag{1};
@@ -86,28 +86,28 @@ namespace network::utilities
         addrinfo* res = result_sa_list;
         for (addrinfo* res = result_sa_list; res != nullptr; res = res->ai_next) {
             if ((socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) == -1) {
-                macros::LOG_ERROR("socket() failed", macros::SOURCE_LOCATION(), errno);
+                macros::LOG_ERROR("socket()", macros::SOURCE_LOCATION(), errno);
                 close(socket_fd);
                 continue;
             }
 
             if (socket_config.blocking_ == Blocking::NO) {
                 if (set_non_blocking(socket_fd) == -1) {
-                    macros::LOG_ERROR("set_non_blocking() failed", macros::SOURCE_LOCATION(), errno);
+                    macros::LOG_ERROR("set_non_blocking()", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);
                     continue;
                 }
             }
 
             if (set_software_timestamp(socket_fd) == -1) {
-                macros::LOG_ERROR("set_software_timestamp() failed", macros::SOURCE_LOCATION(), errno);
+                macros::LOG_ERROR("set_software_timestamp()", macros::SOURCE_LOCATION(), errno);
                 close(socket_fd);
                 continue;
             }
 
             if constexpr (std::is_same_v<T, TCP>) {
                 if (disable_nagle(socket_fd) == -1) {
-                    macros::LOG_ERROR("disable_nagle() failed", macros::SOURCE_LOCATION(), errno);
+                    macros::LOG_ERROR("disable_nagle()", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);
                     continue;
                 }
@@ -116,7 +116,7 @@ namespace network::utilities
             if (socket_config.listening_ == Listening::NO) {
                 if (connect(socket_fd, res->ai_addr, res->ai_addrlen) == -1) {
                     if (errno != EINPROGRESS) {
-                        macros::LOG_ERROR("connect() failed", macros::SOURCE_LOCATION(), errno);
+                        macros::LOG_ERROR("connect()", macros::SOURCE_LOCATION(), errno);
                         close(socket_fd);
                         continue;
                     }
@@ -126,7 +126,7 @@ namespace network::utilities
                     FD_SET(socket_fd, &write_fds); // add socket_fd to set of fd's to monitor
                     struct timeval timeout {.tv_sec = 3, .tv_usec = 0};
                     if (select(socket_fd + 1, nullptr, &write_fds, nullptr, &timeout) == -1) {
-                        macros::LOG_ERROR("select() failed", macros::SOURCE_LOCATION(), errno);
+                        macros::LOG_ERROR("select()", macros::SOURCE_LOCATION(), errno);
                         close(socket_fd);
                         continue;
                     }
@@ -135,13 +135,13 @@ namespace network::utilities
                         int error = 0;
                         socklen_t error_len = sizeof(error);
                         if (getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, &error, &error_len) == -1) {
-                            macros::LOG_ERROR("getsockopt() failed", macros::SOURCE_LOCATION(), errno);
+                            macros::LOG_ERROR("getsockopt()", macros::SOURCE_LOCATION(), errno);
                             close(socket_fd);
                             continue;
                         }
 
                         if (error != 0) {
-                            macros::LOG_ERROR("connect() failed", macros::SOURCE_LOCATION(), error);
+                            macros::LOG_ERROR("connect()", macros::SOURCE_LOCATION(), error);
                             close(socket_fd);
                             continue;
                         }
@@ -151,13 +151,13 @@ namespace network::utilities
 
             if (socket_config.listening_ == Listening::YES) {
                 if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1) {
-                    macros::LOG_ERROR("setsockopt() failed", macros::SOURCE_LOCATION(), errno);
+                    macros::LOG_ERROR("setsockopt()", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);
                     continue;
                 }
 
                 if (bind(socket_fd, res->ai_addr, res->ai_addrlen) == -1) {
-                    macros::LOG_ERROR("bind() failed", macros::SOURCE_LOCATION(), errno);
+                    macros::LOG_ERROR("bind()", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);
                     continue;
                 }
@@ -165,7 +165,7 @@ namespace network::utilities
 
             if (std::is_same_v<T, TCP> && socket_config.listening_ == Listening::YES) {
                 if (listen(socket_fd, MAX_TCP_SERVER_BACKLOG) == -1) {
-                    macros::LOG_ERROR("listen() failed", macros::SOURCE_LOCATION(), errno);
+                    macros::LOG_ERROR("listen()", macros::SOURCE_LOCATION(), errno);
                     close(socket_fd);
                     continue;
                 }

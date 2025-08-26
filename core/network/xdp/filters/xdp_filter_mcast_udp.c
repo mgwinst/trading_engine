@@ -5,7 +5,7 @@
 #include <linux/if_ether.h>
 #include <bpf/bpf_helpers.h>
 
-#define MCAST_IP_ADDR 0xE0000001 // 224.0.1.1
+#define MCAST_IP_ADDR 0xEF000001 // 239.0.0.1
 #define UDP_PORT 33333
 
 SEC("xdp_filter_mcast_udp")

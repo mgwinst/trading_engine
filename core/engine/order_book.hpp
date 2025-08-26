@@ -2,27 +2,22 @@
 
 #include <vector>
 
-#include "common/types.hpp"
+#include "order.hpp"
 
 namespace engine {
 
     struct OrderBook {
+        std::vector<Order> bid_levels_;
+        std::vector<Order> ask_levels_;
 
-        using Order_ID = common::Order_ID;
-        using Side = common::Side;
-        using Price = common::Price;
-        using Volume = common::Volume;
-        using Priority = common::Priority;
-
-        std::vector<std::pair<Price, Volume>> bid_levels_;
-        std::vector<std::pair<Price, Volume>> ask_levels_;
-
-        void add_order(Side side, Price price, Volume volume);
+        auto add_order(const Order& order) -> void;
 
         template <typename T, typename Compare>
-        void engine::OrderBook::add_order(T &levels, Price price, Volume volume, Compare comp);
+        auto add_order(OrderId order_id, T& levels, Price price, Volume volume, Compare comp) -> void;
 
-        std::pair<Price, Volume> get_best_prices() const;
+        auto modify_order(const Order& order) -> void;
+        auto cancel_order(const Order& order) -> void;
+        auto get_best_prices() const -> std::pair<Price, Volume>;
     };
 
 }

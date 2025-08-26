@@ -101,40 +101,4 @@ namespace network::utilities
         return 0;
     }
 
-    inline auto set_packet_capture_version(int32_t fd) noexcept -> int32_t
-    {
-        int version = TPACKET_V3;
-        if (setsockopt(fd, SOL_PACKET, PACKET_VERSION, &version, sizeof(version)) == -1)
-            return -1;
-        return 0;
-    }
-
-    inline auto configure_tpacket_rx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
-    {
-        if (setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &req, sizeof(req)) == -1)
-            return -1;
-        return 0;
-    }
-
-    inline auto configure_tpacket_tx_buf(int32_t fd, const tpacket_req3& req) -> int32_t
-    {
-        if (setsockopt(fd, SOL_PACKET, PACKET_TX_RING, &req, sizeof(req)) == -1)
-            return -1;
-        return 0;
-    }
-
-    // usually passing AF_PACKET == family, ETH_P_IP == protocol
-    inline auto get_sockaddr_ll(std::string_view interface, uint16_t family, uint16_t protocol) -> sockaddr_ll
-    {
-        sockaddr_ll addr{};
-        addr.sll_family = family;
-        addr.sll_protocol = htons(protocol);
-        addr.sll_ifindex = if_nametoindex(interface.data());
-        addr.sll_pkttype = PACKET_HOST | PACKET_MULTICAST;
-        macros::ASSERT(addr.sll_ifindex != 0, "if_nametoindex() failed", macros::SOURCE_LOCATION());
-
-        return addr;
-    }
-
-
 }

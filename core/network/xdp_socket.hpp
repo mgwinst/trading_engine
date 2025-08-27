@@ -11,7 +11,8 @@ namespace network {
 
     struct XDPSocket {
 
-        XDPSocket(std::string_view iface, const XDPConfig& xdp_config) noexcept {
+        XDPSocket(std::string_view iface, const XDPConfig& xdp_config) noexcept 
+        {
             umem_.resize(xdp_config.umem_len);
             pin_buffer(umem_);
             macros::ASSERT((fd_ = socket(AF_XDP, SOCK_RAW, 0)) != -1, "socket()", SOURCE_LOCATION());
@@ -23,7 +24,8 @@ namespace network {
             macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_xdp)) != -1, "bind() failed", SOURCE_LOCATION(), errno);
         }
 
-        ~XDPSocket() noexcept {
+        ~XDPSocket() noexcept 
+        {
             unpin_buffer(umem_);
             // munmap rings
             if (fd_) close(fd_);

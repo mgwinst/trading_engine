@@ -24,10 +24,15 @@ struct PageAlignedAllocator
 
     [[nodiscard]] auto allocate(std::size_t n) -> T* 
     {
-        if (n < 0 || n > max_size()) throw std::bad_array_new_length{};
+        if (n < 0 || n > max_size())
+            throw std::bad_array_new_length{};
+
         std::size_t page_size = getpagesize();
         T* ptr = static_cast<T*>(std::aligned_alloc(page_size, n * sizeof(T)));
-        if (!ptr) throw std::bad_alloc{};
+
+        if (!ptr) 
+            throw std::bad_alloc{};
+
         return ptr;
     }
 

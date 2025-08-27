@@ -5,7 +5,8 @@
 namespace network::utilities 
 {
     template <typename T>
-    struct Server {
+    struct Server 
+    {
         int32_t epoll_fd_{-1};
         Socket<T> listener_socket_;
         epoll_event events_[1024];

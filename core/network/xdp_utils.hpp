@@ -8,23 +8,27 @@
 #include <string_view>
 #include <span>
 
-namespace network {
+namespace network 
+{
 
-    struct RingBufferSizes {
+    struct RingBufferSizes 
+    {
         std::size_t rx_ring_len;
         std::size_t tx_ring_len;
         std::size_t fill_ring_len;
         std::size_t completion_ring_len;
     };
 
-    struct XDPConfig {
+    struct XDPConfig 
+    {
         std::size_t chunk_size;
         std::size_t chunk_count;
         std::size_t umem_len;
         RingBufferSizes ring_buf_sizes;
     };
 
-    struct Rings {
+    struct Rings 
+    {
         void* rx_ring_mmap{ nullptr };
         void* tx_ring_mmap{ nullptr };
         void* fill_ring_mmap{ nullptr };
@@ -45,7 +49,8 @@ namespace network {
         xdp_desc* completion_ring{ nullptr };
     };
 
-    inline auto register_umem(int32_t fd, std::span<std::byte> buffer, const XDPConfig& xdp_config) -> int32_t {
+    inline auto register_umem(int32_t fd, std::span<std::byte> buffer, const XDPConfig& xdp_config) -> int32_t 
+    {
         xdp_umem_reg umem_reg {
             .addr = reinterpret_cast<uint64_t>(static_cast<void*>(buffer.data())),
             .len = xdp_config.umem_len,
@@ -60,7 +65,8 @@ namespace network {
         return 0;
     }
 
-    inline auto set_xsk_ring_sizes(int32_t fd, const RingBufferSizes& rbs) -> int32_t {
+    inline auto set_xsk_ring_sizes(int32_t fd, const RingBufferSizes& rbs) -> int32_t 
+    {
         if (setsockopt(fd, SOL_XDP, XDP_RX_RING, &(rbs.rx_ring_len), sizeof(std::size_t)) == -1 || 
             setsockopt(fd, SOL_XDP, XDP_TX_RING, &(rbs.tx_ring_len), sizeof(std::size_t)) == -1 ||
             setsockopt(fd, SOL_XDP, XDP_UMEM_FILL_RING, &(rbs.fill_ring_len), sizeof(std::size_t)) == -1 ||
@@ -70,14 +76,16 @@ namespace network {
         return 0;
     }
 
-    inline auto get_xdp_mmap_offsets(int32_t fd) -> xdp_mmap_offsets {
+    inline auto get_xdp_mmap_offsets(int32_t fd) -> xdp_mmap_offsets 
+    {
         xdp_mmap_offsets offsets{};
         socklen_t len{sizeof(offsets)};
         getsockopt(fd, SOL_XDP, XDP_MMAP_OFFSETS, &offsets, &len);
         return offsets;
     }
 
-    inline auto init_rings(int32_t fd, const XDPConfig& xdp_config, const xdp_mmap_offsets& offsets, Rings& rings) -> int32_t {
+    inline auto init_rings(int32_t fd, const XDPConfig& xdp_config, const xdp_mmap_offsets& offsets, Rings& rings) -> int32_t 
+    {
         rings.rx_ring_mmap = mmap(nullptr, offsets.rx.desc + xdp_config.ring_buf_sizes.rx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_RX_RING);
         rings.tx_ring_mmap = mmap(nullptr, offsets.rx.desc + xdp_config.ring_buf_sizes.tx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_TX_RING);
         rings.fill_ring_mmap = mmap(nullptr, offsets.fr.desc + xdp_config.ring_buf_sizes.fill_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_UMEM_PGOFF_FILL_RING);
@@ -106,7 +114,8 @@ namespace network {
         return 0;
     } 
 
-    inline auto get_xdp_sockaddr(int32_t fd, std::string_view iface) -> sockaddr_xdp {
+    inline auto get_xdp_sockaddr(int32_t fd, std::string_view iface) -> sockaddr_xdp 
+    {
         sockaddr_xdp sockaddr {
             .sxdp_family = AF_XDP,
             .sxdp_flags = 0,
@@ -118,7 +127,6 @@ namespace network {
     }
 
     inline auto create_and_set_xdp_socket(const XDPConfig& xdp_config) -> int32_t;
-
 }
 
 

@@ -9,7 +9,8 @@
 #define UDP_PORT 33333
 
 SEC("xdp_filter_mcast_udp")
-int xdp_filter(struct xdp_md* ctx) {
+int xdp_filter(struct xdp_md* ctx) 
+{
     void* data = (void*)(long)ctx->data;
     void* data_end = (void*)(long)ctx->data_end;
     struct ethhdr* eth = data;

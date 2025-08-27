@@ -2,8 +2,23 @@
 
 #include <cstdint>
 
-enum class OrderType : uint8_t { FillOrKill, GoodTillCancel };
-enum class Side : uint8_t { bid, ask };
+struct ExchangeMessage 
+{
+    std::byte symbol[8];         
+    std::byte padding[56];
+};
+
+enum class OrderType : uint8_t 
+{ 
+    FillOrKill,
+    GoodTillCancel 
+};
+
+enum class Side : uint8_t 
+{ 
+    Bid,
+    Ask 
+};
 
 using OrderId  = uint64_t;
 using TickerId = uint64_t;
@@ -11,7 +26,8 @@ using Price = uint64_t;
 using Volume = uint64_t;
 using Priority = uint64_t;
 
-struct Order {
+struct Order 
+{
     OrderId order_id_;
     TickerId ticker_id_;
     OrderType order_type_;
@@ -27,4 +43,16 @@ struct Order {
         price_{ price },
         volume_{ volume } {}
 
+};
+
+struct OrderEntry
+{
+    OrderId order_id_;
+    Side side_;
+};
+
+struct PriceLevel
+{
+    Price price_;
+    std::vector<Order> orders_;
 };

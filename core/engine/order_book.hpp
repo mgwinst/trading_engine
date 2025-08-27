@@ -4,20 +4,34 @@
 
 #include "order.hpp"
 
-namespace engine {
-
-    struct OrderBook {
-        std::vector<Order> bid_levels_;
-        std::vector<Order> ask_levels_;
-
+namespace engine 
+{
+    class OrderBook 
+    {
         auto add_order(const Order& order) -> void;
-
-        template <typename T, typename Compare>
-        auto add_order(OrderId order_id, T& levels, Price price, Volume volume, Compare comp) -> void;
-
         auto modify_order(const Order& order) -> void;
         auto cancel_order(const Order& order) -> void;
-        auto get_best_prices() const -> std::pair<Price, Volume>;
+        auto get_best_prices() const -> void;
+
+        OrderBook();
+        OrderBook(const OrderBook&) = delete;
+        void operator=(const OrderBook&) = delete;
+        OrderBook(OrderBook&&) = delete;
+        void operator=(OrderBook&&) = delete;
+        ~OrderBook();
+
+    private:
+        std::vector<PriceLevel> bid_levels_;
+        std::vector<PriceLevel> ask_levels_;
+
+        template <typename T, typename Compare>
+        auto add_order(const Order& order, T& levels, Compare comp) -> void;
+
+        template <typename T>
+        auto cancel_order(const Order& order, T& levels) -> void;
+
+        auto cancel_and_replace(const Order& order) -> void;
+        
     };
 
 }

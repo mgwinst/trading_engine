@@ -1,8 +1,10 @@
 #include <print>
-#include "../core/engine/order.hpp"
 
+#include "../core/orderbook/OrderBook.hpp"
 
-int main() {
-    std::print("{}\n", sizeof(Order));
+int main()
+{
+    OrderBook orderbook{};   
+
 }
 

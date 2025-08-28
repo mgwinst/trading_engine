@@ -1,4 +1,7 @@
 #!/bin/bash
 
 # clang++ -std=c++23 -g -Wall -Wextra -I../ main.cpp && ./a.out 2> log/error.txt
-clang++ -std=c++23 -g -I../ main.cpp && sudo ./a.out
+
+clang++ -std=c++23 -g \
+    -I../ -I../core/ -I../core/common -I../core/network/ -I../core/logging/ \
+    main.cpp ../core/orderbook/OrderBook.cpp -o main && sudo ./main

@@ -20,7 +20,7 @@ public:
     auto modify_order(const Order& order) -> void;
     auto get_best_prices() const -> void;
 
-private:
+// private:
     std::vector<PriceLevel> bid_levels_;
     std::vector<PriceLevel> ask_levels_;
 
@@ -31,6 +31,6 @@ private:
     auto cancel_order(const Order& order, T& levels) -> void;
 
     auto cancel_and_replace(const Order& order) -> void;
-    auto create_new_price_level() -> void;
+    // auto create_new_price_level() -> void;
     
 };

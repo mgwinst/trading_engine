@@ -1,6 +1,7 @@
 #pragma once
 
 #include <orderbook/types.hpp>
+#include <format>
 
 class Order 
 {
@@ -13,6 +14,12 @@ public:
         price_{ price },
         volume_{ volume } 
     {}
+
+    Order(const Order&) = default;
+    Order& operator=(const Order&) = default;
+    Order(Order&&) = default;
+    Order& operator=(Order&&) = default;
+    ~Order() = default;
     
     auto get_order_id() const noexcept -> OrderId { return order_id_; }
     auto get_ticker_id() const noexcept -> TickerId { return ticker_id_; }
@@ -20,6 +27,17 @@ public:
     auto get_side() const noexcept -> Side { return side_; }
     auto get_price() const noexcept -> Price { return price_; }
     auto get_volume() const noexcept -> Volume { return volume_; }
+    auto to_string() const noexcept -> std::string
+    {
+        return std::format("<Order ID: [{}], Ticker: [{}], Type: [{}], Side: [{}], Price: [${}], Volume: [{}]>", 
+            order_id_,
+            ticker_id_,
+            order_type_ == OrderType::GTC ? "GTC" : "FOK",
+            side_ == Side::Bid ? "Bid" : "Ask",
+            price_,
+            volume_
+        );
+    }
     
 private:
     OrderId order_id_;

@@ -4,7 +4,7 @@
 
 #include "Order.hpp"
 
-#define LEVEL_SIZE 1024
+#define INIT_LEVEL_SIZE 1024
 
 class PriceLevel
 {
@@ -12,7 +12,7 @@ public:
     PriceLevel(const Order& order)
     {
         price_ = order.get_price();
-        orders_.reserve(LEVEL_SIZE);
+        orders_.reserve(INIT_LEVEL_SIZE);
         orders_.push_back(order);
     };
 

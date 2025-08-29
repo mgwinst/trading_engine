@@ -9,13 +9,13 @@ struct ExchangeMessage
     std::byte padding[56];
 };
 
-enum class OrderType : uint8_t 
+enum class OrderType
 { 
-    FillOrKill,
-    GoodTillCancel 
+    GTC,
+    FOK
 };
 
-enum class Side : uint8_t 
+enum class Side
 { 
     Bid,
     Ask 

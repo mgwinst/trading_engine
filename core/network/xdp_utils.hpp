@@ -8,9 +8,12 @@
 #include <string_view>
 #include <span>
 
+#include "common/macros.hpp"
+
+using namespace macros;
+
 namespace network 
 {
-
     struct RingBufferSizes 
     {
         std::size_t rx_ring_len;
@@ -67,10 +70,10 @@ namespace network
 
     inline auto set_xsk_ring_sizes(int32_t fd, const RingBufferSizes& rbs) -> int32_t 
     {
-        if (setsockopt(fd, SOL_XDP, XDP_RX_RING, &(rbs.rx_ring_len), sizeof(std::size_t)) == -1 || 
-            setsockopt(fd, SOL_XDP, XDP_TX_RING, &(rbs.tx_ring_len), sizeof(std::size_t)) == -1 ||
-            setsockopt(fd, SOL_XDP, XDP_UMEM_FILL_RING, &(rbs.fill_ring_len), sizeof(std::size_t)) == -1 ||
-            setsockopt(fd, SOL_XDP, XDP_UMEM_COMPLETION_RING, &(rbs.completion_ring_len), sizeof(std::size_t)) == -1
+        if (setsockopt(fd, SOL_XDP, XDP_RX_RING, &(rbs.rx_ring_len), sizeof(rbs.rx_ring_len)) == -1 || 
+            setsockopt(fd, SOL_XDP, XDP_TX_RING, &(rbs.tx_ring_len), sizeof(rbs.tx_ring_len)) == -1 ||
+            setsockopt(fd, SOL_XDP, XDP_UMEM_FILL_RING, &(rbs.fill_ring_len), sizeof(rbs.fill_ring_len)) == -1 ||
+            setsockopt(fd, SOL_XDP, XDP_UMEM_COMPLETION_RING, &(rbs.completion_ring_len), sizeof(rbs.completion_ring_len)) == -1
         ) return -1;
 
         return 0;
@@ -87,9 +90,9 @@ namespace network
     inline auto init_rings(int32_t fd, const XDPConfig& xdp_config, const xdp_mmap_offsets& offsets, Rings& rings) -> int32_t 
     {
         rings.rx_ring_mmap = mmap(nullptr, offsets.rx.desc + xdp_config.ring_buf_sizes.rx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_RX_RING);
-        rings.tx_ring_mmap = mmap(nullptr, offsets.rx.desc + xdp_config.ring_buf_sizes.tx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_TX_RING);
+        rings.tx_ring_mmap = mmap(nullptr, offsets.tx.desc + xdp_config.ring_buf_sizes.tx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_TX_RING);
         rings.fill_ring_mmap = mmap(nullptr, offsets.fr.desc + xdp_config.ring_buf_sizes.fill_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_UMEM_PGOFF_FILL_RING);
-        rings.completion_ring_mmap = mmap(nullptr, offsets.cr.desc + xdp_config.ring_buf_sizes.completion_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_UMEM_COMPLETION_RING);
+        rings.completion_ring_mmap = mmap(nullptr, offsets.cr.desc + xdp_config.ring_buf_sizes.completion_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_UMEM_PGOFF_COMPLETION_RING);
 
         if (rings.rx_ring_mmap == MAP_FAILED ||
             rings.tx_ring_mmap == MAP_FAILED ||

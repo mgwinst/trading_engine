@@ -19,9 +19,9 @@ namespace network {
             macros::ASSERT(register_umem(fd_, umem_, xdp_config) != -1, "register_umem()", SOURCE_LOCATION());
             macros::ASSERT(set_xsk_ring_sizes(fd_, xdp_config.ring_buf_sizes) != -1, "set_xsk_ring_sizes()", SOURCE_LOCATION());
             auto offsets{ get_xdp_mmap_offsets(fd_) };
-            macros::ASSERT(init_rings(fd_, xdp_config, offsets, rings_) != -1, "init_rings()", SOURCE_LOCATION());
-            auto sockaddr { get_xdp_sockaddr(fd_, "eno1") };
-            macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_xdp)) != -1, "bind() failed", SOURCE_LOCATION(), errno);
+            macros::ASSERT(init_rings(fd_, xdp_config, offsets, rings_) != -1, "init_rings()", SOURCE_LOCATION(), errno);
+            auto sockaddr{ get_xdp_sockaddr(fd_, "eno1") };
+            macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_xdp)) != -1, "bind()", SOURCE_LOCATION(), errno);
         }
 
         ~XDPSocket() noexcept 
@@ -36,9 +36,9 @@ namespace network {
         XDPSocket(XDPSocket&&) = delete;
         XDPSocket& operator=(XDPSocket&&) = delete;
 
-        auto send_and_recv() noexcept -> void;
+        auto recvfrom() noexcept -> void;
 
-        int32_t fd_{-1};
+        int32_t fd_{ -1 };
         std::vector<std::byte, PageAlignedAllocator<std::byte>> umem_;
         Rings rings_;
         std::size_t chunk_size_;

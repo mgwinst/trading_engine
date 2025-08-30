@@ -4,4 +4,4 @@
 
 clang++ -std=c++23 -g \
     -I../ -I../core/ \
-    main.cpp ../core/orderbook/OrderBook.cpp -o main && sudo ./main
+    main.cpp ../core/network/xdp_socket.cpp && sudo ./a.out

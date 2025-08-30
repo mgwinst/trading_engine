@@ -22,7 +22,7 @@ namespace network
         std::size_t completion_ring_len;
     };
 
-    struct XDPConfig 
+    struct xsk_config 
     {
         std::size_t chunk_size;
         std::size_t chunk_count;
@@ -52,7 +52,7 @@ namespace network
         xdp_desc* completion_ring{ nullptr };
     };
 
-    inline auto register_umem(int32_t fd, std::span<std::byte> buffer, const XDPConfig& xdp_config) -> int32_t 
+    inline auto register_umem(int32_t fd, std::span<std::byte> buffer, const xsk_config& xdp_config) -> int32_t 
     {
         xdp_umem_reg umem_reg {
             .addr = reinterpret_cast<uint64_t>(static_cast<void*>(buffer.data())),
@@ -87,7 +87,7 @@ namespace network
         return offsets;
     }
 
-    inline auto init_rings(int32_t fd, const XDPConfig& xdp_config, const xdp_mmap_offsets& offsets, Rings& rings) -> int32_t 
+    inline auto init_rings(int32_t fd, const xsk_config& xdp_config, const xdp_mmap_offsets& offsets, Rings& rings) -> int32_t 
     {
         rings.rx_ring_mmap = mmap(nullptr, offsets.rx.desc + xdp_config.ring_buf_sizes.rx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_RX_RING);
         rings.tx_ring_mmap = mmap(nullptr, offsets.tx.desc + xdp_config.ring_buf_sizes.tx_ring_len * sizeof(xdp_desc), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, fd, XDP_PGOFF_TX_RING);
@@ -129,7 +129,7 @@ namespace network
         return sockaddr;
     }
 
-    inline auto create_and_set_xdp_socket(const XDPConfig& xdp_config) -> int32_t;
+    inline auto create_and_set_xdp_socket(const xsk_config& xdp_config) -> int32_t;
 }
 
 

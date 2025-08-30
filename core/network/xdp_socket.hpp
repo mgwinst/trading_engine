@@ -9,9 +9,9 @@ using namespace macros;
 
 namespace network {
 
-    struct XDPSocket {
+    struct xdp_socket {
 
-        XDPSocket(std::string_view iface, const XDPConfig& xdp_config) noexcept 
+        xdp_socket(std::string_view iface, const xsk_config& xdp_config) noexcept 
         {
             umem_.resize(xdp_config.umem_len);
             pin_buffer(umem_);
@@ -24,17 +24,17 @@ namespace network {
             macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(struct sockaddr_xdp)) != -1, "bind()", SOURCE_LOCATION(), errno);
         }
 
-        ~XDPSocket() noexcept 
+        ~xdp_socket() noexcept 
         {
             unpin_buffer(umem_);
             // munmap rings
             if (fd_) close(fd_);
         }
 
-        XDPSocket(const XDPSocket&) = delete;
-        XDPSocket& operator=(const XDPSocket&) = delete;
-        XDPSocket(XDPSocket&&) = delete;
-        XDPSocket& operator=(XDPSocket&&) = delete;
+        xdp_socket(const xdp_socket&) = delete;
+        xdp_socket& operator=(const xdp_socket&) = delete;
+        xdp_socket(xdp_socket&&) = delete;
+        xdp_socket& operator=(xdp_socket&&) = delete;
 
         auto recvfrom() noexcept -> void;
 

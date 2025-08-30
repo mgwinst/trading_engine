@@ -6,40 +6,42 @@
 
 #define INIT_LEVEL_SIZE 1024
 
-class PriceLevel
+namespace orderbook
 {
-public:
-    PriceLevel(const Order& order)
+    class PriceLevel
     {
-        price_ = order.get_price();
-        orders_.reserve(INIT_LEVEL_SIZE);
-        orders_.push_back(order);
+    public:
+        PriceLevel(const Order& order) noexcept
+        {
+            price_ = order.price();
+            orders_.reserve(INIT_LEVEL_SIZE);
+            orders_.push_back(order);
+        };
+
+        PriceLevel(PriceLevel&& price_level) noexcept
+        {
+            price_ = price_level.price();
+            orders_ = std::move(price_level.orders());
+        }
+
+        auto operator=(PriceLevel&& price_level) noexcept -> PriceLevel&
+        {
+            price_ = price_level.price();
+            orders_ = std::move(price_level.orders());
+
+            return *this;
+        }
+
+        PriceLevel(const PriceLevel&) = delete;
+        void operator=(const PriceLevel&) = delete;
+        ~PriceLevel() = default;
+
+        auto price() const noexcept -> Price { return price_; }
+        auto orders() noexcept -> std::vector<Order>& { return orders_; }
+        
+    private:
+        Price price_;
+        std::vector<Order> orders_;
     };
 
-    PriceLevel(PriceLevel&& price_level)
-    {
-        price_ = price_level.get_price();
-        orders_ = std::move(price_level.get_orders());
-    }
-
-    auto operator=(PriceLevel&& price_level) -> PriceLevel&
-    {
-        price_ = price_level.get_price();
-        orders_ = std::move(price_level.get_orders());
-
-        return *this;
-    }
-
-    PriceLevel(const PriceLevel&) = delete;
-    void operator=(const PriceLevel&) = delete;
-
-    ~PriceLevel() = default;
-
-    auto get_price() const -> Price { return price_; }
-    auto get_orders() -> std::vector<Order>& { return orders_; }
-    
-private:
-    Price price_;
-    std::vector<Order> orders_;
-};
-
+} // end of namespace

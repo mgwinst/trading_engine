@@ -3,26 +3,35 @@
 #include <cstdint>
 #include <cstddef>
 
-struct ExchangeMessage 
+namespace orderbook
 {
-    std::byte symbol[8];         
-    std::byte padding[56];
-};
+    struct ExchangeMessage 
+    {
+        std::byte symbol[8];         
+        std::byte padding[56];
+    };
 
-enum class OrderType
-{ 
-    GTC,
-    FOK
-};
+    enum class OrderType
+    { 
+        Market,
+        Limit
+    };
 
-enum class Side
-{ 
-    Bid,
-    Ask 
-};
+    enum class Side
+    { 
+        Bid,
+        Ask 
+    };
 
-using OrderId  = uint64_t;
-using TickerId = uint64_t;
-using Price = uint64_t;
-using Volume = uint64_t;
-using Priority = uint64_t;
+    using OrderId  = uint64_t;
+    using TickerId = uint64_t;
+    using Price = uint64_t;
+    using Volume = uint64_t;
+    using Priority = uint64_t;
+
+    struct BestPrice
+    {
+        Price bid;
+        Price ask;
+    };
+} // end of namespace

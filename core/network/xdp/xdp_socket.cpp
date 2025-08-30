@@ -13,7 +13,10 @@ namespace network
     xdp_socket::xdp_socket(std::string_view interface, const xsk_info& config) noexcept
     {
         info_ = config;
-        
+
+        // auto result = initialize(interface, config);
+        // check result
+
         umem_.resize(config.umem_len_);
         pin_buffer(umem_);
 
@@ -23,7 +26,10 @@ namespace network
         macros::ASSERT(map_rings() != -1, "map_rings()", SOURCE_LOCATION(), errno);
 
         auto sockaddr{ get_xsk_addr(interface) };
-        macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(sockaddr_xdp)) != -1, "bind()", SOURCE_LOCATION(), errno); // will fail until xdp program is loaded onto interface
+        macros::ASSERT(bind(fd_, (struct sockaddr*)&sockaddr, sizeof(sockaddr_xdp)) != -1,
+            "bind()", SOURCE_LOCATION(), errno); // will fail until xdp program is loaded onto interface
+
+        // ensure zero-copy after bind()
     }
 
     xdp_socket::~xdp_socket() noexcept
@@ -93,12 +99,14 @@ namespace network
     {
         return sockaddr_xdp {
             .sxdp_family = AF_XDP,
-            .sxdp_flags = 0,
+            .sxdp_flags = XDP_ZEROCOPY,
             .sxdp_ifindex = if_nametoindex(interface.data()),
             .sxdp_queue_id = static_cast<uint32_t>(info_.queue_id_),
-            .sxdp_shared_umem_fd = static_cast<uint32_t>(fd_)
+            .sxdp_shared_umem_fd = 0
         };
     }
+
+    
 
 } // end of namespace
 

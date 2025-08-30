@@ -1,7 +1,7 @@
 #include <print>
 #include <algorithm>
 
-#include "network/xdp_socket.hpp"
+#include "network/xdp/xdp_socket.hpp"
 
 int main()
 {

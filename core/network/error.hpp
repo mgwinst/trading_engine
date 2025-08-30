@@ -3,8 +3,11 @@
 #include <string>
 #include <system_error>
 
-struct ConfigurationError
+enum class XdpError
 {
-   std::string message;
-   std::error_code error;
+   SocketCreationFailed,
+   UmemRegistrationFailed,
+   RingMappingFailed,
+   BindFailed,
+   InvalidInterface
 };

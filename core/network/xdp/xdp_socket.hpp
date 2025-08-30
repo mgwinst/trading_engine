@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "xdp_utils.hpp"
+#include "network/error.hpp"
 #include "common/allocators.hpp" // memory and allocators should be in one header?
 #include "common/memory.hpp"
 #include "common/macros.hpp"
@@ -33,11 +34,11 @@ namespace network
         xsk_info info_;
         xsk_rings rings_;
 
+        // auto initialize(std::string_view interface, const xsk_info& config) -> std::expected<void, XdpError>;
         auto get_xsk_addr(std::string_view interface) -> sockaddr_xdp;
         auto register_umem() -> int32_t;
         auto map_rings() -> int32_t;
         auto unmap_rings() -> int32_t;
-
     };
 
 } // end of namespace

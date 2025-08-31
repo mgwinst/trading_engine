@@ -10,18 +10,14 @@
 
 namespace network 
 {
-    xdp_socket::xdp_socket(std::string_view interface, const xsk_info& config) noexcept
+    xdp_socket::xdp_socket(std::string_view interface, const xsk_socket_info& config) noexcept
     {
         info_ = config;
-
-        // auto result = initialize(interface, config);
-        // check result
 
         umem_.resize(config.umem_len_);
         pin_buffer(umem_);
 
         macros::ASSERT((fd_ = socket(AF_XDP, SOCK_RAW, 0)) != -1, "socket()", SOURCE_LOCATION());
-
         macros::ASSERT(register_umem() != -1, "register_umem()", SOURCE_LOCATION());
         macros::ASSERT(map_rings() != -1, "map_rings()", SOURCE_LOCATION(), errno);
 

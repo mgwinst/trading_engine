@@ -5,7 +5,7 @@
 
 namespace network 
 {
-    struct xsk_info 
+    struct xsk_socket_info 
     {
         std::size_t chunk_size_;
         std::size_t chunk_count_;

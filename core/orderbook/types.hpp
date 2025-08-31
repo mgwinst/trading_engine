@@ -5,12 +5,6 @@
 
 namespace orderbook
 {
-    struct ExchangeMessage 
-    {
-        std::byte symbol[8];         
-        std::byte padding[56];
-    };
-
     enum class OrderType
     { 
         Market,

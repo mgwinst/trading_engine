@@ -39,4 +39,6 @@ namespace macros
     {
         std::println(std::cerr, "{} | {} | error: {} [{}]", location, message, std::strerror(error), error);
     }
+
+    #define exit_with_error(error) __exit_with_error(error, __FILE__, __func__, __LINE__)
 }

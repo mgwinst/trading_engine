@@ -1,19 +1,24 @@
 #pragma once
 
 #include <sys/socket.h>
+#include <linux/if_ether.h>
+#include <linux/if_packet.h>
+#include <linux/net_tstamp.h>
 #include <linux/in.h>
 #include <netinet/tcp.h>
-#include <linux/net_tstamp.h>
-
-#include <string>
-#include <string_view>
+#include <net/if.h>
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <fcntl.h>
 #include <cerrno>
-#include <linux/if_packet.h>
-#include <net/if.h>
-#include <linux/if_ether.h>
+#include <string_view>
+#include <string>
+#include <filesystem>
+
+inline auto interface_exists(const std::string& interface) -> bool
+{
+    return std::filesystem::exists("/sys/class/net" + interface);
+}
 
 inline auto get_interface_ip(std::string_view interface) noexcept -> std::string
 {

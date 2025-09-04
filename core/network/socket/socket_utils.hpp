@@ -4,12 +4,12 @@
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
 #include <linux/net_tstamp.h>
-#include <linux/in.h>
 #include <netinet/tcp.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <cerrno>
 #include <string_view>
 #include <string>
@@ -17,7 +17,7 @@
 
 inline auto interface_exists(const std::string& interface) -> bool
 {
-    return std::filesystem::exists("/sys/class/net" + interface);
+    return std::filesystem::exists("/sys/class/net/" + interface);
 }
 
 inline auto get_interface_ip(std::string_view interface) noexcept -> std::string
@@ -84,7 +84,7 @@ inline auto set_timestamp(int32_t fd, TimestampType type) noexcept -> int32_t
     else if (type == TimestampType::RX_SOFTWARE_AND_HARDWARE)
         flags = SOF_TIMESTAMPING_RX_SOFTWARE | SOF_TIMESTAMPING_RX_HARDWARE;
 
-    if (setsockopt(fd, SOL_PACKET, SO_TIMESTAMP, &flags, sizeof(flags)))
+    if (setsockopt(fd, SOL_PACKET, PACKET_TIMESTAMP, &flags, sizeof(flags)))
         return -1;
 
     return 0;
@@ -121,7 +121,7 @@ inline auto bind_to_interface(int32_t fd, std::string_view interface) -> int32_t
 {
     sockaddr_ll addr{};
     addr.sll_family = AF_PACKET,
-    addr.sll_ifindex = if_nametoindex(interface.data());
+    addr.sll_ifindex = static_cast<int>(if_nametoindex(interface.data()));
     addr.sll_protocol = htons(ETH_P_ALL);
 
     if (bind(fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)))

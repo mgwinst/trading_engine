@@ -7,19 +7,19 @@
 #include <print>
 
 #define assert(cond, msg) \
-    do { \
+    { \
         auto loc = std::source_location::current(); \
         auto loc_str = std::format("{}:{}:{}: {}", loc.file_name(), loc.line(), loc.column(), loc.function_name()); \
         if (!cond) [[unlikely]] { \
-            std::println(std::cerr, "{} | {} | error: {} [{}]", loc_str, msg, std::strerror(error), error); \
+            std::println(std::cerr, "{} | {} | error: {} [{}]", loc_str, msg, std::strerror(errno), errno); \
             exit(EXIT_FAILURE); \
         } \
-    } while (1)
+    }
 
 #define error_exit(msg) \
-    do { \
+    { \
         auto loc = std::source_location::current(); \
         auto loc_str = std::format("{}:{}:{}: {}", loc.file_name(), loc.line(), loc.column(), loc.function_name()); \
         std::println(std::cerr, "{} | {} | error: {} [{}]", loc_str, msg, std::strerror(errno), errno); \
         std::exit(EXIT_FAILURE); \
-    } while (1)
+    }

@@ -43,24 +43,22 @@ public:
     SPSCQueue(SPSCQueue&&) = delete;
     SPSCQueue& operator=(SPSCQueue&&) = delete;
 
-    auto write(std::span<std::byte> buffer) -> std::size_t
+    auto write(T* data, std::size_t bytes_to_write) -> std::size_t
     {
         std::size_t write_counter = write_counter_.load(std::memory_order_relaxed);
         std::size_t read_counter = read_counter_.load(std::memory_order_acquire);
 
-        if (full(write_counter, read_counter))
+        if (full(write_counter, read_counter) || bytes_to_write > space(write_counter, read_counter))
             return 0;
 
-        std::size_t bytes_in_queue = write_counter - read_counter;
-        std::size_t bytes_to_write = std::min(buffer.size(), (capacity_ - bytes_in_queue));
-        std::size_t index = get_index(write_counter);
-        std::size_t bytes_to_end = capacity_ - index;
+        auto index = get_index(write_counter);
+        auto bytes_to_end = capacity_ - index;
 
         if (bytes_to_write <= bytes_to_end) {
-            std::memcpy(ring_ + index, buffer.data(), bytes_to_write);
+            std::memcpy(ring_ + index, data, bytes_to_write);
         } else {
-            std::memcpy(ring_ + index, buffer.data(), bytes_to_end);
-            std::memcpy(ring_, buffer.data() + bytes_to_end, bytes_to_write - bytes_to_end);
+            std::memcpy(ring_ + index, data, bytes_to_end);
+            std::memcpy(ring_, data + bytes_to_end, bytes_to_write - bytes_to_end);
         }
 
         write_counter_.store(write_counter + bytes_to_write, std::memory_order_release);
@@ -68,7 +66,7 @@ public:
         return bytes_to_write;
     }
     
-    auto read(std::span<std::byte> buffer) -> std::size_t
+    auto read(T* buffer, std::size_t bytes_to_read) -> std::size_t
     {
         std::size_t write_counter = write_counter_.load(std::memory_order_relaxed);
         std::size_t read_counter = read_counter_.load(std::memory_order_acquire);
@@ -76,17 +74,18 @@ public:
         if (empty(write_counter, read_counter))
             return 0;
 
-        std::size_t bytes_in_queue = write_counter - read_counter;
+        auto bytes_in_queue = size(write_counter, read_counter);
 
-        std::size_t index = get_index(read_counter);
-        std::size_t bytes_to_read = std::min(buffer.size(), bytes_in_queue);
-        std::size_t bytes_to_end = capacity_ - index;
+        bytes_to_read = std::min(bytes_to_read, bytes_in_queue);
+
+        auto index = get_index(read_counter);
+        auto bytes_to_end = capacity_ - index;
 
         if (bytes_to_read < bytes_to_end) {
-            std::memcpy(buffer.data(), ring_ + index, bytes_to_read);
+            std::memcpy(buffer, ring_ + index, bytes_to_read);
         } else {
-            std::memcpy(buffer.data(), ring_ + index, bytes_to_end);
-            std::memcpy(buffer.data() + bytes_to_end, ring_, bytes_to_read - bytes_to_end);
+            std::memcpy(buffer, ring_ + index, bytes_to_end);
+            std::memcpy(buffer + bytes_to_end, ring_, bytes_to_read - bytes_to_end);
         }
 
         read_counter_.store(read_counter + bytes_to_read, std::memory_order_release);
@@ -104,7 +103,9 @@ private:
     // alignas(cache_line_size) std::atomic<std::size_t> cached_read_counter_{ 0 };
     static_assert(std::atomic<std::size_t>::is_always_lock_free);
 
-    auto full(std::size_t write_counter, std::size_t read_counter) const -> bool { return (write_counter - read_counter) == capacity_; }
-    auto empty(std::size_t write_counter, std::size_t read_counter) const -> bool { return write_counter == read_counter; }
+    auto size(std::size_t write_counter, std::size_t read_counter) const -> std::size_t { return write_counter - read_counter; }
+    auto full(std::size_t write_counter, std::size_t read_counter) const -> bool { return size(write_counter, read_counter) == capacity_; }
+    auto empty(std::size_t write_counter, std::size_t read_counter) const -> bool { return size(write_counter, read_counter) == 0; }
     auto get_index(std::size_t counter) const -> std::size_t { return (counter & (capacity_ - 1)); }
+    auto space(std::size_t write_counter, std::size_t read_counter) const -> std::size_t { return capacity_ - size(write_counter, read_counter); }
 };

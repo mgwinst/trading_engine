@@ -3,13 +3,15 @@
 #include <cstdint>
 #include <string_view>
 
+#include "tpacket.hpp"
+#include "socket_utils.hpp"
+
 namespace network
 {
     struct RawSocket
     {
-        RawSocket();
+    public:
         RawSocket(std::string_view interface);
-
         ~RawSocket();
 
         RawSocket(const RawSocket&) = delete;
@@ -17,9 +19,8 @@ namespace network
         RawSocket(RawSocket&&) = delete;
         RawSocket& operator=(RawSocket&&) = delete;
 
-        auto readfrom() -> uint32_t;
-
         int32_t fd_;
-        // spsc ring buffer
+        Ring ring_;
+        // tpacket_stats_v3 stats;
     };
 } // end of namespace

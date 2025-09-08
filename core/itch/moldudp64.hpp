@@ -2,17 +2,17 @@
 
 #include <cstdint>
 
-struct mold_udp_64_hdr
+struct moldhdr
 {
     char session[10];
     uint64_t seq_num;
     uint16_t msg_count;
     
-    struct message_block
+    struct msgblk
     {
         uint16_t msg_len;
         void* data{ nullptr };
-    } msg_block;
+    } msg_blk;
 };
 
 struct request_packet

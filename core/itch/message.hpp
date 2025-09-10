@@ -5,73 +5,73 @@
 
 struct SystemEventMessage
 {
-    char type; // 'S'
+    uint8_t type; // 'S'
     uint16_t stock_locate; // Always 0
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char event_code; // 'O', 'S', 'Q', 'M', 'E', 'C'
+    uint8_t event_code; // 'O', 'S', 'Q', 'M', 'E', 'C'
 } __attribute__((packed));
 
 struct StockDirectoryMessage
 {
-    char type; // 'R'
+    uint8_t type; // 'R'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char market_category; // 'Q', 'G', 'S', 'N', 'A', 'P', 'Z', 'V', or ' '
-    char financial_status_indicator; // 'D', 'E', 'Q', 'S', 'G', 'H', 'J', 'K', 'C', 'N', or ' '
+    uint8_t symbol[8];
+    uint8_t market_category; // 'Q', 'G', 'S', 'N', 'A', 'P', 'Z', 'V', or ' '
+    uint8_t financial_status_indicator; // 'D', 'E', 'Q', 'S', 'G', 'H', 'J', 'K', 'C', 'N', or ' '
     uint32_t round_lot_size;
-    char round_lots_only; // 'Y' or 'N'
-    char issue_classification;
-    char issue_sub_type[2];
-    char authenticity; // 'P' or 'T'
-    char short_sale_threshold_indicator; // 'Y', 'N', or ' '
-    char ipo_flag; // 'Y', 'N', or ' '
-    char luld_reference_price_tier; // '1', '2', or ' '
-    char etp_flag; // 'Y', 'N', or ' '
+    uint8_t round_lots_only; // 'Y' or 'N'
+    uint8_t issue_classification;
+    uint8_t issue_sub_type[2];
+    uint8_t authenticity; // 'P' or 'T'
+    uint8_t short_sale_threshold_indicator; // 'Y', 'N', or ' '
+    uint8_t ipo_flag; // 'Y', 'N', or ' '
+    uint8_t luld_reference_price_tier; // '1', '2', or ' '
+    uint8_t etp_flag; // 'Y', 'N', or ' '
     uint32_t etp_leverage_factor;
-    char inverse_indicator; // 'Y' or 'N'
+    uint8_t inverse_indicator; // 'Y' or 'N'
 } __attribute__((packed));
 
 struct StockTradingActionMessage
 {
-    char type; // 'H'
+    uint8_t type; // 'H'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char trading_state; // 'H', 'P', 'Q', 'T'
-    char reserved;
-    char reason[4];
+    uint8_t symbol[8];
+    uint8_t trading_state; // 'H', 'P', 'Q', 'T'
+    uint8_t reserved;
+    uint8_t reason[4];
 } __attribute__((packed));
 
 struct RegSHORestrictionMessage
 {
-    char type; // 'Y'
+    uint8_t type; // 'Y'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char reg_sho_action; // '0', '1', '2'
+    uint8_t symbol[8];
+    uint8_t reg_sho_action; // '0', '1', '2'
 } __attribute__((packed));
 
 struct MarketParticipantPositionMessage
 {
-    char type; // 'L'
+    uint8_t type; // 'L'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char mpid[4];
-    char symbol[8];
-    char primary_market_maker; // 'Y' or 'N'
-    char market_maker_mode; // 'N', 'P', 'S', 'R', 'L'
-    char market_participant_state; // 'A', 'E', 'W', 'S', 'D'
+    uint8_t mpid[4];
+    uint8_t symbol[8];
+    uint8_t primary_market_maker; // 'Y' or 'N'
+    uint8_t market_maker_mode; // 'N', 'P', 'S', 'R', 'L'
+    uint8_t market_participant_state; // 'A', 'E', 'W', 'S', 'D'
 } __attribute__((packed));
 
 struct MWCBDeclineLevelMessage
 {
-    char type; // 'V'
+    uint8_t type; // 'V'
     uint16_t stock_locate; // always 0
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -82,32 +82,32 @@ struct MWCBDeclineLevelMessage
 
 struct MWCBStatusMessage
 {
-    char type; // 'W'
+    uint8_t type; // 'W'
     uint16_t stock_locate; // always 0
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char breached_level; // '1', '2', '3'
+    uint8_t breached_level; // '1', '2', '3'
 } __attribute__((packed));
 
 struct QuotingPeriodUpdateMessage
 {
-    char type; // 'K'
+    uint8_t type; // 'K'
     uint16_t stock_locate; // Always 0
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t ipo_quotation_release_time; // seconds since midnight
-    char ipo_quotation_release_qualifier; // 'A' or 'C'
+    uint8_t ipo_quotation_release_qualifier; // 'A' or 'C'
     uint32_t ipo_price;
 } __attribute__((packed));
 
 struct LULDAuctionCollarMessage
 {
-    char type; // 'J'
+    uint8_t type; // 'J'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t auction_collar_reference_price;
     uint32_t upper_auction_collar_price;
     uint32_t lower_auction_collar_price;
@@ -116,45 +116,45 @@ struct LULDAuctionCollarMessage
 
 struct OperationalHaltMessage
 {
-    char type; // 'h'
+    uint8_t type; // 'h'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char market_code; // 'Q', 'B', 'X'
-    char operational_halt_action; // 'H' or 'T'
+    uint8_t symbol[8];
+    uint8_t market_code; // 'Q', 'B', 'X'
+    uint8_t operational_halt_action; // 'H' or 'T'
 } __attribute__((packed));
 
 struct AddOrderMessage
 {
-    char type; // 'A'
+    uint8_t type; // 'A'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t reference_number;
-    char side;
+    uint8_t side;
     uint32_t num_shares;
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t price;
 } __attribute__((packed));
 
 struct AddOrderMPIDMessage
 {
-    char type; // 'F'
+    uint8_t type; // 'F'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t reference_number;
-    char side;
+    uint8_t side;
     uint32_t num_shares;
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t price;
-    char mpid_attribute[4];
+    uint8_t mpid_attribute[4];
 } __attribute__((packed));
 
 struct OrderExecutedMessage
 {
-    char type; // 'E'
+    uint8_t type; // 'E'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -165,20 +165,20 @@ struct OrderExecutedMessage
 
 struct OrderExecutedWithPriceMessage
 {
-    char type; // 'C'
+    uint8_t type; // 'C'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t reference_number;
     uint32_t executed_shares;
     uint64_t match_number;
-    char printable; // 'Y' or 'N'
+    uint8_t printable; // 'Y' or 'N'
     uint32_t execution_price;
 } __attribute__((packed));
 
 struct OrderCancelMessage
 {
-    char type; // 'X'
+    uint8_t type; // 'X'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -188,7 +188,7 @@ struct OrderCancelMessage
 
 struct OrderDeleteMessage
 {
-    char type; // 'D'
+    uint8_t type; // 'D'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -197,7 +197,7 @@ struct OrderDeleteMessage
 
 struct OrderReplaceMessage
 {
-    char type; // 'U'
+    uint8_t type; // 'U'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -209,34 +209,34 @@ struct OrderReplaceMessage
 
 struct NonCrossTradeMessage
 {
-    char type; // 'P'
+    uint8_t type; // 'P'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t reference_number;
-    char side; // 'B' or 'S'
+    uint8_t side; // 'B' or 'S'
     uint32_t num_shares;
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t price;
     uint64_t match_number;
 } __attribute__((packed));
 
 struct CrossTradeMessage
 {
-    char type; // 'Q'
+    uint8_t type; // 'Q'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t num_shares;
-    char symbol[8];
+    uint8_t symbol[8];
     uint32_t cross_price;
     uint64_t match_number;
-    char cross_type; // 'O', 'C', 'H'
+    uint8_t cross_type; // 'O', 'C', 'H'
 } __attribute__((packed));
 
 struct BrokenTradeMessage
 {
-    char type; // 'B'
+    uint8_t type; // 'B'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
@@ -245,39 +245,39 @@ struct BrokenTradeMessage
 
 struct NOIIMessage
 {
-    char type; // 'I'
+    uint8_t type; // 'I'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
     uint64_t num_paired_shares;
     uint64_t num_imbalanced_shares;
-    char imbalance_direction;
-    char symbol[8];
+    uint8_t imbalance_direction;
+    uint8_t symbol[8];
     uint32_t far_price;
     uint32_t near_price;
     uint32_t current_reference_price;
-    char cross_type;
-    char price_variation_indicator;
+    uint8_t cross_type;
+    uint8_t price_variation_indicator;
 } __attribute__((packed));
 
 struct RPPIMessage
 {
-    char type; // 'N'
+    uint8_t type; // 'N'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char interest_flag;
+    uint8_t symbol[8];
+    uint8_t interest_flag;
 } __attribute__((packed));
 
 struct DirectListingWithCapitalRaisePriceDiscoveryMessage
 {
-    char type; // 'O'
+    uint8_t type; // 'O'
     uint16_t stock_locate;
     uint16_t tracking_number;
     uint8_t timestamp[6];
-    char symbol[8];
-    char open_eligibility_status;
+    uint8_t symbol[8];
+    uint8_t open_eligibility_status;
     uint32_t min_allowable_price;
     uint32_t max_allowable_price;
     uint32_t near_execution_price;

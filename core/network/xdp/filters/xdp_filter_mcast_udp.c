@@ -43,7 +43,8 @@ int rx_filter(struct xdp_md* ctx)
         if (!udp || udp->dest != bpf_htons(UDP_PORT))
             return XDP_DROP;
         
-        return bpf_redirect_map(&xsk, ctx->rx_queue_index, XDP_PASS);
+        // return bpf_redirect_map(&xsk, ctx->rx_queue_index, XDP_PASS);
+        return XDP_PASS;
     }
 }
 

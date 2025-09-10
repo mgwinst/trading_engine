@@ -4,8 +4,10 @@
 #include <type_traits>
 #include <cstring>
 #include <algorithm>
+#include <print>
 
-#include "msg_handlers.hpp"
+#include "itch/msg_handlers.hpp"
+#include "itch/msg_types.hpp"
 
 namespace rng = std::ranges;
 
@@ -19,16 +21,14 @@ void add_order_handler(msgblk* msg)
     static_assert(std::is_trivially_copyable_v<AddOrderMessage>, "AddOrderMessage must be trivially copyable");
     
     std::array<std::byte, sizeof(AddOrderMessage)> buffer;
-    std::memcpy(buffer.data(), msg, sizeof(AddOrderMessage));
+    std::memcpy(buffer.data(), msg->data, sizeof(AddOrderMessage));
     auto add_order = std::bit_cast<AddOrderMessage>(buffer);
     
     add_order.stock_locate = std::byteswap(add_order.stock_locate);
     add_order.tracking_number = std::byteswap(add_order.tracking_number);
     add_order.reference_number = std::byteswap(add_order.reference_number);
     add_order.num_shares = std::byteswap(add_order.num_shares);
-    add_order.price = std::byteswap(add_order.price);
-    
-    // pass this message to orderbook
+    add_order.price = std::byteswap(add_order.price);   
 }
 
 void add_order_mpid_handler(msgblk* msg)

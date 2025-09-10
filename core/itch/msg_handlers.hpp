@@ -2,8 +2,7 @@
 
 #include <array>
 
-#include "moldudp64.hpp"
-#include "message.hpp"
+#include "itch/moldudp64.hpp"
 
 using MessageHandler = void(*)(msgblk*);
 

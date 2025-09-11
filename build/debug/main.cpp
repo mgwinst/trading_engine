@@ -10,20 +10,16 @@ int main()
 {
     L2::OrderBook orderbook{};
     
-    orderbook.add_order(Price{10}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{10}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{8}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{15}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{13}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{9}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{13}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{19}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{11}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{14}, Volume{50}, Side::Bid);
-    orderbook.add_order(Price{14}, Volume{50}, Side::Bid);
+    orderbook.process_order(Action::Add, Price{10}, Volume{50}, Side::Bid);
+    orderbook.process_order(Action::Add, Price{11}, Volume{50}, Side::Bid);
+    orderbook.process_order(Action::Add, Price{12}, Volume{50}, Side::Bid);
 
-    for (auto& x : orderbook.bid_levels_) {
-        std::print("Price: {}, Volume: {}\n", x.first, x.second);
+    orderbook.process_order(Action::Cancel, Price{12}, Volume{20}, Side::Bid);
+    orderbook.process_order(Action::Cancel, Price{12}, Volume{30}, Side::Bid);
+
+    for (const auto x : orderbook.bid_levels_) {
+        auto [price, volume] = x;
+        std::print("Price: {} Volume: {}\n", price, volume);
     }
 
     return 0;

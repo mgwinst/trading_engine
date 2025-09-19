@@ -19,4 +19,5 @@ namespace network
         if (fd_)
             close(fd_);
     }
-} // end of namespace
+
+} // namespace network

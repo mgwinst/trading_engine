@@ -8,7 +8,6 @@ using MessageHandler = void(*)(msgblk*);
 
 void system_event_handler(msgblk* msg);
 void add_order_handler(msgblk* msg);
-void add_order_mpid_handler(msgblk* msg);
 void cancel_order_handler(msgblk* msg);
 void delete_order_handler(msgblk* msg);
 void replace_order_handler(msgblk* msg);

@@ -10,7 +10,6 @@ namespace network
 {
     struct RawSocket
     {
-    public:
         RawSocket(std::string_view interface);
         ~RawSocket();
 
@@ -23,4 +22,5 @@ namespace network
         Ring ring_;
         // tpacket_stats_v3 stats;
     };
-} // end of namespace
+
+} // namespace network

@@ -5,8 +5,8 @@
 #include <linux/if_ether.h>
 #include <bpf/bpf_helpers.h>
 
-#define MCAST_IP_ADDR 0xEF000001 // 239.0.0.1
-#define UDP_PORT 33333
+#define SRC_IP 0x0a0000f6 // 10.0.0.246
+#define DST_UDP_PORT 33333
 
 struct {
     __uint(type, BPF_MAP_TYPE_XSKMAP);
@@ -34,17 +34,17 @@ int rx_filter(struct xdp_md* ctx)
         ip = (void*)(eth + 1);          
 
         if (ip + 1 < data_end) {
-            if (ip->protocol != IPPROTO_UDP || ip->daddr != bpf_htonl(MCAST_IP_ADDR))
+            if (ip->protocol != IPPROTO_UDP || ip->saddr != bpf_htonl(SRC_IP))
                 return XDP_DROP;
         }
 
         udp = (void*)(ip + 1);
 
-        if (!udp || udp->dest != bpf_htons(UDP_PORT))
+        if (!udp || udp->dest != bpf_htons(DST_UDP_PORT))
             return XDP_DROP;
         
-        // return bpf_redirect_map(&xsk, ctx->rx_queue_index, XDP_PASS);
         return XDP_PASS;
+        // return bpf_redirect_map(&xsk, ctx->rx_queue_index, XDP_PASS);
     }
 }
 

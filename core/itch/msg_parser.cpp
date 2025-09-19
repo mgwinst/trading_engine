@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 
-#include "itch/msg_parser.hpp"
 #include "common/macros.hpp"
+#include "itch/msg_parser.hpp"
 #include "itch/moldudp64.hpp"
 #include "itch/msg_types.hpp"
 #include "itch/msg_handlers.hpp"
@@ -10,12 +10,10 @@ namespace rng = std::ranges;
 
 constexpr uint8_t session_num[10] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '1'};
 
-void simd_parse_mold_packet(void* packet) 
-{
-    
-}
+// void simd_parse_mold_packet(std::byte* packet) 
 
-void parse_mold_packet(void* packet) 
+
+void parse_mold_packet(std::byte* packet) 
 {
     moldhdr* mold_hdr = reinterpret_cast<moldhdr *>(packet);
     
@@ -36,5 +34,5 @@ void parse_mold_packet(void* packet)
         msg_handlers[msg->data[0]](msg);
         msg = reinterpret_cast<msgblk *>(reinterpret_cast<uint8_t *>(msg) + msg->msg_len + sizeof(msg->msg_len));
     }
-    
 }
+

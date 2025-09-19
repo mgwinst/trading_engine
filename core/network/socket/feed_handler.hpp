@@ -9,7 +9,6 @@
 
 #include "raw_socket.hpp"
 #include "itch/moldudp64.hpp"
-#include "common/queues/spsc_queue.hpp"
 
 namespace network
 {
@@ -25,7 +24,7 @@ namespace network
         FeedHandler& operator=(FeedHandler&&) = delete; 
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
-        void start_rx(SPSCQueue<uint8_t>& buffer);
+        void start_rx(auto& buffer);
         void stop_rx();
 
     private:
@@ -34,4 +33,5 @@ namespace network
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];
     };
-} // end of namespace
+
+} // namespace network

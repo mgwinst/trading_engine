@@ -20,7 +20,7 @@ inline auto interface_exists(const std::string& interface) -> bool
     return std::filesystem::exists("/sys/class/net/" + interface);
 }
 
-inline auto get_interface_ip(std::string_view interface) noexcept -> std::string
+inline auto get_interface_ip(std::string_view interface) noexcept
 {
     char buffer[NI_MAXHOST] = {'\0'};
     ifaddrs* ifaddr{ nullptr }; 
@@ -43,7 +43,7 @@ inline auto get_interface_ip(std::string_view interface) noexcept -> std::string
     return std::string{ buffer };
 }
 
-inline auto set_non_blocking(int32_t fd) noexcept -> int32_t
+inline auto set_non_blocking(int32_t fd) noexcept
 {
     const auto flags = fcntl(fd, F_GETFL, 0); // this returns the flags associated with fd currently
 
@@ -55,7 +55,7 @@ inline auto set_non_blocking(int32_t fd) noexcept -> int32_t
     return 0;
 }
 
-inline auto disable_nagle(int32_t fd) noexcept -> int32_t
+inline auto disable_nagle(int32_t fd) noexcept
 {
     int32_t flag = 1;
 
@@ -73,7 +73,7 @@ enum class TimestampType
 };
 
 // use when not using PACKET_MMAP (TPACKET_Vx includes timestamps automatically)
-inline auto set_timestamp(int32_t fd, TimestampType type) noexcept -> int32_t
+inline auto set_timestamp(int32_t fd, TimestampType type) noexcept
 {
     int flags;
     
@@ -90,7 +90,7 @@ inline auto set_timestamp(int32_t fd, TimestampType type) noexcept -> int32_t
     return 0;
 }
 
-inline auto timestamp_str(const TimestampType& tstamp_type) -> std::string
+inline auto timestamp_str(const TimestampType& tstamp_type)
 {
     if (tstamp_type == TimestampType::RX_SOFTWARE)
         return "software";
@@ -100,12 +100,12 @@ inline auto timestamp_str(const TimestampType& tstamp_type) -> std::string
         return "software & hardware";
 }
 
-inline auto would_block() noexcept -> bool
+inline auto would_block() noexcept
 {
     return (errno == EWOULDBLOCK || errno == EINPROGRESS);
 }
 
-inline auto set_socket_rx_buffer_size(int32_t fd, int32_t size) -> int32_t
+inline auto set_socket_rx_buffer_size(int32_t fd, int32_t size)
 {
     int32_t buf_size = size;
 
@@ -116,7 +116,7 @@ inline auto set_socket_rx_buffer_size(int32_t fd, int32_t size) -> int32_t
 }
 
 // use with select() and poll()
-inline auto set_busy_poll(int32_t fd, int32_t busy_poll_us) -> int32_t
+inline auto set_busy_poll(int32_t fd, int32_t busy_poll_us)
 {
     int32_t time = busy_poll_us;
 
@@ -127,7 +127,7 @@ inline auto set_busy_poll(int32_t fd, int32_t busy_poll_us) -> int32_t
 }
 
 // binding raw socket to interface
-inline auto bind_to_interface(int32_t fd, std::string_view interface) -> int32_t
+inline auto bind_to_interface(int32_t fd, std::string_view interface)
 {
     sockaddr_ll addr{};
     addr.sll_family = AF_PACKET,

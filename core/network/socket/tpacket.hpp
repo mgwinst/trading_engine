@@ -13,7 +13,6 @@
 
 #include "socket_utils.hpp"
 #include "common/macros.hpp"
-#include "common/queues/spsc_queue.hpp"
 
 #define BLOCK_SIZE (2 * 1024 * 1024)
 #define BLOCK_COUNT 8
@@ -84,19 +83,18 @@ inline void flush_block(tpacket_block_desc* block_desc)
 {
     std::atomic_thread_fence(std::memory_order_release);
     block_desc->hdr.bh1.block_status = TP_STATUS_KERNEL;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 inline bool is_block_readable(tpacket_block_desc* block_desc)
 {
-    std::atomic_thread_fence(std::memory_order_acquire);
+    std::atomic_thread_fence(std::memory_order_acquire); 
     return block_desc->hdr.bh1.block_status & TP_STATUS_USER;
 }
 
-inline void process_block(tpacket_block_desc* block_desc, SPSCQueue<uint8_t>& buffer)
+inline void process_block(tpacket_block_desc* block_desc, auto& buffer)
 {
     int32_t num_pkts = block_desc->hdr.bh1.num_pkts;
-    tpacket3_hdr *tpkt_hdr = reinterpret_cast<tpacket3_hdr *>((reinterpret_cast<uint8_t *>(block_desc) + block_desc->hdr.bh1.offset_to_first_pkt));
+    tpacket3_hdr* tpkt_hdr = reinterpret_cast<tpacket3_hdr *>((reinterpret_cast<uint8_t *>(block_desc) + block_desc->hdr.bh1.offset_to_first_pkt));
 
     for (std::size_t i = 0; i < num_pkts; i++)
     {

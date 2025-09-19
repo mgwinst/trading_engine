@@ -4,21 +4,10 @@
 #include <utility>
 #include <unordered_map>
 
-#include "orderbook/types.hpp"
+#include "orderbook/orderbook_types.hpp"
 
 namespace L2
 {
-    struct Order
-    {
-        std::size_t reference_number;
-        Side side;
-        Price price;
-        Volume volume;
-        
-        
-        
-    };
-
     class OrderBook
     {
     public:
@@ -31,16 +20,15 @@ namespace L2
         
         void process_order(Action action, const Price, const Volume, const Side) noexcept;
     
-        std::pair<Price, Price> best_prices() const;
         std::vector<Price> bid_prices() const noexcept;
         std::vector<Price> ask_prices() const noexcept;
-
-        std::vector<std::pair<Price, Volume>> bid_levels_;
-        std::vector<std::pair<Price, Volume>> ask_levels_;
-        std::unordered_map<std::size_t, Order> orders_;
-        
+        std::pair<Price, Price> best_prices() const noexcept;
 
     private:
+        std::vector<std::pair<Price, Volume>> bid_levels_;
+        std::vector<std::pair<Price, Volume>> ask_levels_;
+        // std::unordered_map<size_t, Order> orders_;
+
         template <typename T, typename Compare>
         void process_order(Action action, T& levels, const Price price, const Volume volume, Compare comp) noexcept;
 

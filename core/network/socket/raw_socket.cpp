@@ -8,7 +8,23 @@ namespace network
 {
     RawSocket::RawSocket(std::string_view interface)
     {
-        fd_ = setup_socket(ring_, interface);
+        if (!interface_exists(interface.data()))
+            error_exit("interface doesn't exist");
+
+        int32_t socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
+        if (socket_fd == -1)
+            error_exit("socket()");
+
+        configure_ring(socket_fd, ring_);
+
+        if (set_non_blocking(socket_fd))
+            error_exit("set_non_blocking()");
+
+        if (bind_to_interface(socket_fd, interface.data()))
+            error_exit("bind_to_interface()");
+
+        fd_ = socket_fd;
     }
 
     RawSocket::~RawSocket()

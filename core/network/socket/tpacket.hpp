@@ -18,14 +18,20 @@
 #define BLOCK_COUNT 8
 #define FRAME_SIZE 2048
 
-struct Ring
+struct RingDesc
 {
-    struct iovec* rd{ nullptr };
-    uint8_t* map{ nullptr };
-    struct tpacket_req3 req;
+    uint8_t* block_ptr{ nullptr };
+    std::size_t len{ 0 };
 };
 
-inline auto configure_ring(int32_t fd, Ring& ring) -> void
+struct Ring
+{
+    RingDesc* rd{ nullptr };
+    uint8_t* map{ nullptr };
+    tpacket_req3 req{};
+};
+
+inline void configure_ring(int32_t fd, Ring& ring)
 {
     int32_t version = TPACKET_V3;
 
@@ -48,35 +54,14 @@ inline auto configure_ring(int32_t fd, Ring& ring) -> void
     if (ring.map == MAP_FAILED)
         error_exit("mmap()");
 
-    ring.rd = reinterpret_cast<iovec *>(std::malloc(ring.req.tp_block_nr * sizeof(ring.rd)));
+    ring.rd = new RingDesc[ring.req.tp_block_nr];
     if (!ring.rd)
         error_exit("malloc()");
 
     for (int i = 0; i < ring.req.tp_block_nr; i++) {
-        ring.rd[i].iov_base = ring.map + (i * ring.req.tp_block_size);
-        ring.rd[i].iov_len = ring.req.tp_block_size;
+        ring.rd[i].block_ptr = ring.map + (i * ring.req.tp_block_size);
+        ring.rd[i].len = ring.req.tp_block_size;
     }
-}
-
-inline auto setup_socket(Ring& ring, std::string_view interface) -> int32_t
-{
-    if (!interface_exists(interface.data()))
-        error_exit("interface doesn't exist");
-
-    int32_t socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-
-    if (socket_fd == -1)
-        error_exit("socket()");
-
-    configure_ring(socket_fd, ring);
-
-    if (set_non_blocking(socket_fd))
-        error_exit("set_non_blocking()");
-
-    if (bind_to_interface(socket_fd, interface.data()))
-        error_exit("bind_to_interface()");
-
-    return socket_fd;
 }
 
 inline void flush_block(tpacket_block_desc* block_desc)

@@ -63,8 +63,8 @@ namespace L2
         return prices;
     }
 
-    // throw on no buy or sell orders
-    std::pair<Price, Price> OrderBook::best_prices() const
+    // throw on no buy or sell orders?
+    std::pair<Price, Price> OrderBook::best_prices() const noexcept
     {
         auto best_bid = bid_levels_.back().first;
         auto best_ask = ask_levels_.back().first;

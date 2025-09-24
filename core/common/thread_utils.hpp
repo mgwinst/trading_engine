@@ -17,7 +17,7 @@ namespace common {
     }
     
     template <typename F, typename... Args>
-    inline auto create_and_pin_thread(int core_id, F&& func, Args&&... args) noexcept -> std::thread* {
+    inline std::thread* create_and_pin_thread(int core_id, F&& func, Args&&... args) noexcept {
         std::atomic_bool running, failed;
         
         auto thread_body = [&] {

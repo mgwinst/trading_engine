@@ -9,13 +9,15 @@
 
 #include "queues/concepts.hpp"
 
+#define DEFAULT_BUFFER_SIZE (1<<22) // 4MB
+
 #ifdef __cpp_lib_hardware_interference_size
     inline static constexpr std::size_t cache_line_size {std::hardware_destructive_interference_size};
 #else
     inline static constexpr std::size_t cache_line_size {64};
 #endif
 
-inline auto power_of_two(std::size_t n)
+inline constexpr auto power_of_two(const std::size_t n)
 {
     return (n > 0 && (n & (n - 1)) == 0);
 }
@@ -45,10 +47,10 @@ public:
         const auto bytes_to_end = capacity() - index;
 
         if (bytes_to_write <= bytes_to_end) {
-            std::memcpy(ring_ + index, data, bytes_to_write);
+            std::memcpy(ring_.get() + index, data, bytes_to_write);
         } else {
-            std::memcpy(ring_ + index, data, bytes_to_end);
-            std::memcpy(ring_, data + bytes_to_end, bytes_to_write - bytes_to_end);
+            std::memcpy(ring_.get() + index, data, bytes_to_end);
+            std::memcpy(ring_.get(), data + bytes_to_end, bytes_to_write - bytes_to_end);
         }
 
         write_counter_.store(write_counter + bytes_to_write, std::memory_order_release);

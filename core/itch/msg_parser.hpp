@@ -1,9 +1,11 @@
 #pragma once
 
 #include <type_traits>
+#include <cstring>
 #include <bit>
 
 #include "itch/moldudp64.hpp"
+#include "itch/msg_types.hpp"
 
 void simd_parse_mold_packet(void *);
 void parse_mold_packet(void *);
@@ -12,6 +14,12 @@ template <typename T>
 void network_to_host(T& value)
 {
     static_assert(false, "function not implemented for type T");
+}
+
+template <>
+inline void network_to_host<SystemEventMessage>(SystemEventMessage& value)
+{
+
 }
 
 template <>

@@ -9,6 +9,7 @@
 
 #include "raw_socket.hpp"
 #include "itch/moldudp64.hpp"
+#include "common/queues/CircularBuffer.hpp"
 
 namespace network
 {
@@ -24,7 +25,7 @@ namespace network
         FeedHandler& operator=(FeedHandler&&) = delete; 
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
-        void start_rx(auto& buffer);
+        void start_rx(CircularBuffer<uint8_t, DEFAULT_BUFFER_SIZE>& buffer);
         void stop_rx();
 
     private:

@@ -8,10 +8,10 @@
 
 namespace rng = std::ranges;
 
-constexpr uint8_t session_num[10] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '1'};
-
-// void simd_parse_mold_packet(std::byte* packet) 
-
+namespace
+{
+    constexpr uint8_t session_num[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0', '1'};
+}
 
 void parse_mold_packet(std::byte* packet) 
 {

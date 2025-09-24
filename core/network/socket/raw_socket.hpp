@@ -19,7 +19,7 @@ namespace network
         RawSocket& operator=(RawSocket&&) = delete;
 
         int32_t fd_;
-        Ring ring_;
+        Ring ring_{};
         // tpacket_stats_v3 stats;
     };
 

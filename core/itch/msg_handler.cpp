@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <print>
 
-#include "itch/msg_handlers.hpp"
+#include "itch/msg_handler.hpp"
 #include "itch/msg_types.hpp"
 #include "itch/msg_parser.hpp"
 

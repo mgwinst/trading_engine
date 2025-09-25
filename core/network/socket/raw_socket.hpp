@@ -18,7 +18,9 @@ namespace network
         RawSocket(RawSocket&&) = delete;
         RawSocket& operator=(RawSocket&&) = delete;
 
-        int32_t fd_;
+        void read();
+
+        int32_t fd_{ -1 };
         Ring ring_{};
         // tpacket_stats_v3 stats;
     };

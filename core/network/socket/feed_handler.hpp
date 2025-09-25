@@ -6,17 +6,16 @@
 #include <memory>
 #include <vector>
 #include <atomic>
+#include <thread>
 
 #include "raw_socket.hpp"
-#include "itch/moldudp64.hpp"
-#include "common/queues/CircularBuffer.hpp"
 
 namespace network
 {
     class FeedHandler 
     {
     public:
-        FeedHandler();
+        FeedHandler(std::shared_ptr<RawSocket>& socket);
         ~FeedHandler();
 
         FeedHandler(const FeedHandler&) = delete; 
@@ -24,8 +23,7 @@ namespace network
         FeedHandler(FeedHandler&&) = delete; 
         FeedHandler& operator=(FeedHandler&&) = delete; 
 
-        void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
-        void start_rx(CircularBuffer<uint8_t, DEFAULT_BUFFER_SIZE>& buffer);
+        void start_rx();
         void stop_rx();
 
     private:
@@ -33,6 +31,9 @@ namespace network
         std::shared_ptr<RawSocket> rx_socket_;
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];
+        std::thread* rx_thread_{ nullptr };
+
+        void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
     };
 
 } // namespace network

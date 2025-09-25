@@ -5,5 +5,5 @@
 clang++ -std=c++23 -g -I../ -I../../core/ -I../../core/common \
     main.cpp ../../core/orderbook/L2/orderbook.cpp \
     ../../core/network/socket/raw_socket.cpp ../../core/network/socket/feed_handler.cpp \
-    ../../core/itch/msg_handlers.cpp ../../core/itch/msg_parser.cpp \
+    ../../core/itch/msg_handler.cpp ../../core/itch/msg_parser.cpp \
     && sudo ./a.out

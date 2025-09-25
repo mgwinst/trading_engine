@@ -1,8 +1,10 @@
-#include "raw_socket.hpp"
-#include "socket_utils.hpp"
+#include "sys/epoll.h"
+
+#include "network/socket/raw_socket.hpp"
+#include "network/socket/socket_utils.hpp"
+#include "network/socket/tpacket.hpp"
 #include "common/macros.hpp"
 #include "common/memory.hpp"
-#include "tpacket.hpp"
 
 namespace network
 {
@@ -30,10 +32,29 @@ namespace network
     RawSocket::~RawSocket()
     {
         munmap(ring_.map, ring_.req.tp_block_size * ring_.req.tp_block_nr);
-        std::free(ring_.rd);
+        delete[] ring_.rd;
 
         if (fd_)
             close(fd_);
+    }
+
+    void RawSocket::read()
+    {
+        static std::size_t block_idx{ 0 };
+
+        for (std::size_t block_iter = 0; block_iter < ring_.req.tp_block_nr; block_iter++) {
+            tpacket_block_desc* block_desc = reinterpret_cast<tpacket_block_desc *>(ring_.rd[block_idx].block_ptr);
+            if (!is_block_readable(block_desc)) {
+                block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);
+                continue;
+            }
+            
+            process_block(block_desc);
+            flush_block(block_desc);
+            block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);
+
+            block_iter = 0;
+        }
     }
 
 } // namespace network

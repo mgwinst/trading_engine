@@ -11,8 +11,10 @@
 #include <unistd.h>
 #include <atomic>
 
-#include "socket_utils.hpp"
 #include "common/macros.hpp"
+#include "network/socket/socket_utils.hpp"
+#include "itch/moldudp64.hpp"
+#include "itch/msg_parser.hpp"
 
 #define BLOCK_SIZE (2 * 1024 * 1024)
 #define BLOCK_COUNT 8
@@ -76,26 +78,20 @@ inline bool is_block_readable(tpacket_block_desc* block_desc)
     return block_desc->hdr.bh1.block_status & TP_STATUS_USER;
 }
 
-inline void process_block(tpacket_block_desc* block_desc, auto& buffer)
+inline void process_block(tpacket_block_desc* block_desc)
 {
     int32_t num_pkts = block_desc->hdr.bh1.num_pkts;
     tpacket3_hdr* tpkt_hdr = reinterpret_cast<tpacket3_hdr *>((reinterpret_cast<uint8_t *>(block_desc) + block_desc->hdr.bh1.offset_to_first_pkt));
 
     for (std::size_t i = 0; i < num_pkts; i++)
     {
+        // outline for now, must do len checks and stuff...
         ethhdr* eth_hdr = reinterpret_cast<ethhdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_mac);
         iphdr* ip_hdr = reinterpret_cast<iphdr *>(reinterpret_cast<uint8_t *>(eth_hdr) + sizeof(eth_hdr));
         udphdr* udp_hdr = reinterpret_cast<udphdr *>(reinterpret_cast<uint8_t *>(ip_hdr) + (ip_hdr->ihl * 4));
-        uint8_t* payload = reinterpret_cast<uint8_t *>(udp_hdr) + sizeof(udp_hdr);
+        moldhdr* mold_hdr = reinterpret_cast<moldhdr *>(reinterpret_cast<uint8_t *>(udp_hdr) + sizeof(udp_hdr));
 
-        std::size_t payload_len = ntohs(udp_hdr->len) - sizeof(udp_hdr);
-
-        std::size_t bytes_written{0};
-        while (payload_len > 0)
-        {
-            bytes_written += buffer.write(payload + bytes_written, payload_len);
-            payload_len -= bytes_written;
-        }
+        // parse_mold_packet(mold_hdr);
 
         tpkt_hdr = reinterpret_cast<tpacket3_hdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_next_offset);
     }

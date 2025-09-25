@@ -7,7 +7,7 @@
 #include <span>
 #include <new>
 
-#include "queues/concepts.hpp"
+#include "common/concepts.hpp"
 
 #define DEFAULT_BUFFER_SIZE (1<<22) // 4MB
 
@@ -17,16 +17,10 @@
     inline static constexpr std::size_t cache_line_size {64};
 #endif
 
-inline constexpr auto power_of_two(const std::size_t n)
-{
-    return (n > 0 && (n & (n - 1)) == 0);
-}
-
 template <ByteType T, std::size_t Capacity>
+requires is_power_of_two<Capacity>
 class CircularBuffer
 {
-    static_assert(power_of_two(Capacity));
-
 public:
     CircularBuffer() : ring_{ std::make_unique<T[]>(Capacity) } {}
 
@@ -74,15 +68,21 @@ public:
         const auto bytes_to_end = capacity() - index;
 
         if (bytes_to_read < bytes_to_end) {
-            std::memcpy(buffer, ring_ + index, bytes_to_read);
+            std::memcpy(buffer, ring_.get() + index, bytes_to_read);
         } else {
-            std::memcpy(buffer, ring_ + index, bytes_to_end);
-            std::memcpy(buffer + bytes_to_end, ring_, bytes_to_read - bytes_to_end);
+            std::memcpy(buffer, ring_.get() + index, bytes_to_end);
+            std::memcpy(buffer + bytes_to_end, ring_.get(), bytes_to_read - bytes_to_end);
         }
 
         read_counter_.store(read_counter + bytes_to_read, std::memory_order_release);
 
         return bytes_to_read;
+    }
+
+    T* get_read_pointer()
+    {
+        std::size_t read_counter = read_counter_.load(std::memory_order_acquire);
+        return &(ring_.get() + get_index(read_counter));
     }
 
 private:

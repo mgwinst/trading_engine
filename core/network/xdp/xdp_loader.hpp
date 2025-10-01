@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bpf/libbpf.h>
 
 struct xdp_program_info

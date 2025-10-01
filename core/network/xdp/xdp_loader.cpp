@@ -49,9 +49,6 @@ xdp_program_info attach_xdp_filter(const char* interface)
 
 void detach_xdp_filter(xdp_program_info info)
 {
-    if (info.ifindex == 0)
-        error_exit("Interface not found");
-
     int ret = bpf_xdp_detach(info.ifindex, XDP_FLAGS_SKB_MODE, nullptr);
     if (ret)
         error_exit("Failed to detach XDP program");

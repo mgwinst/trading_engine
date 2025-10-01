@@ -83,9 +83,7 @@ inline void process_block(tpacket_block_desc* block_desc)
     int32_t num_pkts = block_desc->hdr.bh1.num_pkts;
     tpacket3_hdr* tpkt_hdr = reinterpret_cast<tpacket3_hdr *>((reinterpret_cast<uint8_t *>(block_desc) + block_desc->hdr.bh1.offset_to_first_pkt));
 
-    for (std::size_t i = 0; i < num_pkts; i++)
-    {
-        // outline for now, must do len checks and stuff...
+    for (std::size_t i = 0; i < num_pkts; i++) {
         ethhdr* eth_hdr = reinterpret_cast<ethhdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_mac);
         iphdr* ip_hdr = reinterpret_cast<iphdr *>(reinterpret_cast<uint8_t *>(eth_hdr) + sizeof(eth_hdr));
         udphdr* udp_hdr = reinterpret_cast<udphdr *>(reinterpret_cast<uint8_t *>(ip_hdr) + (ip_hdr->ihl * 4));

@@ -47,7 +47,8 @@ namespace network
             }
         };
 
-        rx_thread_ = new std::thread{rx_loop};
+        auto core_id = 0;
+        rx_thread_ = common::create_and_pin_thread(core_id, rx_loop);
     }
 
     void FeedHandler::stop_rx()
@@ -59,6 +60,14 @@ namespace network
         
         delete rx_thread_;
         rx_thread_ = nullptr;
+    }
+
+    std::shared_ptr<FeedHandler> init_feed_handler(std::string_view iface)
+    {
+        auto socket = std::make_shared<RawSocket>(iface);
+        auto feed_handler = std::make_shared<FeedHandler>(socket);
+        feed_handler->start_rx();
+        return feed_handler;
     }
 
 } // namespace network

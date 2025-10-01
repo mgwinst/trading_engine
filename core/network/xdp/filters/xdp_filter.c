@@ -15,7 +15,7 @@ struct {
     __type(value, __u32);
 } xsk SEC(".maps");
 
-SEC("xdp_filter_mcast_udp")
+SEC("xdp_filter")
 int rx_filter(struct xdp_md* ctx) 
 {
     void* data = (void*)(long)ctx->data;

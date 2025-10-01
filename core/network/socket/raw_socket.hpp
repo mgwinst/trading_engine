@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <string_view>
 
-#include "tpacket.hpp"
-#include "socket_utils.hpp"
+#include "network/socket/tpacket.hpp"
+#include "network/socket/socket_utils.hpp"
 
 namespace network
 {
@@ -22,6 +22,8 @@ namespace network
 
         int32_t fd_{ -1 };
         Ring ring_{};
+        
+        // CircularBuffer<uint8_t, DEFAULT_BUFFER_SIZE> buffer_{};
         // tpacket_stats_v3 stats;
     };
 

@@ -5,6 +5,7 @@
 #include <sys/epoll.h>
 #include <memory>
 #include <vector>
+#include <utility>
 #include <atomic>
 #include <thread>
 
@@ -36,4 +37,6 @@ namespace network
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
     };
 
+    std::shared_ptr<FeedHandler> init_feed_handler(std::string_view iface);
+    
 } // namespace network

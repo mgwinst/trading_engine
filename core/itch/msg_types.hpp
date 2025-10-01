@@ -12,6 +12,7 @@ struct SystemEventMessage
     uint8_t event_code; // 'O', 'S', 'Q', 'M', 'E', 'C'
 } __attribute__((packed));
 
+// important for mapping equities for the trading day
 struct StockDirectoryMessage
 {
     uint8_t type; // 'R'

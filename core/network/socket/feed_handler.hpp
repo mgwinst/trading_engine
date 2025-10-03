@@ -30,13 +30,13 @@ namespace network
     private:
         std::atomic<bool> running_{ false };
         std::shared_ptr<RawSocket> rx_socket_;
+        std::unique_ptr<std::thread> rx_thread_;
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];
-        std::thread* rx_thread_{ nullptr };
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
     };
 
-    std::shared_ptr<FeedHandler> init_feed_handler(std::string_view iface);
+    std::shared_ptr<FeedHandler> make_feed_handler(std::string_view iface);
     
 } // namespace network

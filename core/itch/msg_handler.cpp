@@ -45,6 +45,11 @@ void system_event_handler(msgblk* msg)
     }
 }
 
+void stock_directory_handler(msgblk* msg)
+{
+    auto stock_directory_message = deserialize<StockDirectoryMessage>(msg);
+}
+
 void add_order_handler(msgblk* msg)
 {
     auto add_order = deserialize<AddOrderMessage>(msg);
@@ -68,12 +73,12 @@ void replace_order_handler(msgblk* msg)
 const std::array<MessageHandler, num_handlers>& get_msg_handler_table()
 {
     static constexpr std::array<MessageHandler, num_handlers> msg_handler_table = []() constexpr {
-        std::array<MessageHandler, num_handlers> temp_table{};
-
-        for (size_t i = 0; i < num_handlers; i++)
-            temp_table[i] = &empty_handler;
+        std::array<MessageHandler, num_handlers> temp_table;
+        
+        temp_table.fill(&empty_handler);
 
         temp_table['S'] = &system_event_handler;
+        temp_table['R'] = &stock_directory_handler;
         temp_table['A'] = &add_order_handler;
         temp_table['X'] = &cancel_order_handler;
         temp_table['D'] = &delete_order_handler;

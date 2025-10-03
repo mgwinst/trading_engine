@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <utility>
 #include <optional>
@@ -73,7 +75,7 @@ public:
         if (empty(cached_write_pointer_, read_pointer)) {
             cached_write_pointer_ = write_pointer_.load(std::memory_order::acquire);
             if (empty(cached_write_pointer_, read_pointer)) {
-                return std::nullopt;
+                return {};
             }
         }
         

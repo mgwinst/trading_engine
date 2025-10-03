@@ -1,20 +1,34 @@
+#include <unordered_map>
 #include <algorithm>
 #include <print>
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <string>
+#include <array>
 
+#include "common/queues/MessageQueues.hpp"
 #include "common/thread_utils.hpp"
-#include "orderbook/L2/orderbook.hpp"
+#include "common/json_parser.hpp"
 #include "network/socket/raw_socket.hpp"
 #include "network/socket/feed_handler.hpp"
+#include "orderbook/orderbook_manager.hpp"
 
-using namespace std::chrono_literals;
+struct ExchangeMessage
+{
+
+};
 
 int main()
 {
-    auto fh = network::init_feed_handler("eno1");
+    auto interface = parse_interface_from_json("../../config.json");   
+    auto tickers = parse_tickers_from_json("../../config.json");
 
-    std::this_thread::sleep_for(5s);
+    auto feed_handler = network::make_feed_handler(*interface);
+
+    auto& msg_queues = MessageQueues<ExchangeMessage>::get_instance();
+
+    msg_queues.add_queues(*tickers);
+    
 
 }   

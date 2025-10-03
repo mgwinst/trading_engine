@@ -24,6 +24,12 @@ inline void network_to_host<SystemEventMessage>(SystemEventMessage& value)
 }
 
 template <>
+inline void network_to_host<StockDirectoryMessage>(StockDirectoryMessage& value)
+{
+
+}
+
+template <>
 inline void network_to_host<AddOrderMessage>(AddOrderMessage& value)
 {
     value.stock_locate = std::byteswap(value.stock_locate);

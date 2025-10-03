@@ -1,9 +1,0 @@
-[network]
-interface = "eno1"
-xdp_filter_obj_path = "core/network/xdp/xdp_filter.o"
-
-[engine]
-symbol1 = "TSLA"
-symbol2 = "NVDA"
-symbol3 = "PLTR"
-

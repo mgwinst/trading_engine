@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 #include <cstring>
 
-#include "common/spsc_queue.hpp"
+#include "common/queues/SPSCQueue.hpp"
 #include "common/macros.hpp"
 #include "itch/msg_parser.hpp"
 #include "itch/moldudp64.hpp"
@@ -27,7 +27,10 @@ void parse_mold_packet(moldhdr* mold_hdr)
 
     for (std::size_t i = 0; i < mold_hdr->msg_count; i++) {
         msgblk* msg = mold_hdr->msg_blk;
-        msg_handlers[msg->data[0]](msg); // we want this to be non-blocking?
+        msg_handlers[msg->data[0]](msg);
+
+        // handle pushing to proper queue...
+
         msg = reinterpret_cast<msgblk *>(reinterpret_cast<uint8_t *>(msg) + msg->msg_len + sizeof(msg->msg_len));
     }
 }

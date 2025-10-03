@@ -45,12 +45,12 @@ namespace network
         for (std::size_t block_iter = 0; block_iter < ring_.req.tp_block_nr; block_iter++) {
             tpacket_block_desc* block_desc = reinterpret_cast<tpacket_block_desc *>(ring_.rd[block_idx].block_ptr);
             if (!is_block_readable(block_desc)) {
-                std::println("block not readable...");
+                // std::println("block not readable...");
                 block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);
                 continue;
             }
             
-            std::println("process_block()");
+            // std::println("process_block()");
             process_block(block_desc);
             flush_block(block_desc);
             block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);

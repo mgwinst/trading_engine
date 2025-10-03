@@ -6,7 +6,7 @@
 #include <cstring>
 #include <print>
 
-#define assert(cond, msg) \
+#define ASSERT(cond, msg) \
     { \
         auto loc = std::source_location::current(); \
         auto loc_str = std::format("{}:{}:{}: {}", loc.file_name(), loc.line(), loc.column(), loc.function_name()); \

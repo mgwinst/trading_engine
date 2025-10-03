@@ -1,0 +1,10 @@
+{
+  "network": {
+    "interface": "eno1",
+    "xdp_filter_obj_path": "$TRADING_ENGINE_HOME/core/network/xdp/xdp_filter.o"
+  },
+
+  "engine": {
+    "tickers": ["TSLA", "NVDA", "PLTR"]
+  }
+}

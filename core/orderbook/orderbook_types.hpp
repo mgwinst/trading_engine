@@ -9,11 +9,6 @@ enum class OrderType
     Limit
 };
 
-enum class Side
-{ 
-    Bid,
-    Ask 
-};
 
 enum class Action
 {
@@ -21,8 +16,10 @@ enum class Action
     Cancel
 };
 
+using Side = uint8_t;
+
 using OrderId  = uint64_t;
 using TickerId = uint64_t;
-using Price = uint64_t;
-using Volume = uint64_t;
-using Priority = uint64_t;
+using Price = uint32_t;
+using Volume = uint32_t;
+// using Priority = uint64_t;

@@ -18,7 +18,7 @@ namespace L2
         OrderBook& operator=(OrderBook&&) = default;
         ~OrderBook();
         
-        void process_order(Action action, const Price, const Volume, const Side) noexcept;
+        void process_order(const Action, const Price, const Volume, const Side) noexcept;
     
         std::vector<Price> bid_prices() const noexcept;
         std::vector<Price> ask_prices() const noexcept;

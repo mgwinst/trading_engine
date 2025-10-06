@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unordered_map>
 #include <algorithm>
 #include <print>
@@ -7,42 +8,47 @@
 #include <string>
 #include <array>
 
+/*
 #include "common/queues/MessageQueues.hpp"
 #include "common/thread_utils.hpp"
 #include "common/json_parser.hpp"
 #include "network/socket/raw_socket.hpp"
 #include "network/socket/feed_handler.hpp"
 #include "orderbook/orderbook_manager.hpp"
+#include "parser/msg_types.hpp"
+*/
 
-struct ExchangeMessage
-{
-    const char* value;
-};
+#include "common/CoreSet.hpp"
+
 
 int main()
 {
-    auto iface = parse_interface_from_json("../../config.json");   
-    auto tickers = parse_tickers_from_json("../../config.json");
+    auto& cores = CoreSet::instance();
+    
+    auto core_id0 = cores.claim_core();
+    auto core_id1 = cores.claim_core();
+    auto core_id2 = cores.claim_core();
 
-    auto feed_handler = network::make_feed_handler(*iface);
+    std::cout << "coreid0 " << core_id0 << std::endl;
+    std::cout << "coreid1 " << core_id1 << std::endl;
+    std::cout << "coreid2 " << core_id2 << std::endl;
 
-    auto books = OrderbookManager{*tickers};
-    auto& msg_queues = MessageQueues<ExchangeMessage>::get_instance();
+    auto available_cores = cores.current_core_set();
 
-    ExchangeMessage msg1{"[NVDA] $50"};
-    ExchangeMessage msg2{"[TSLA] $25"};
-    ExchangeMessage msg3{"[PLTR] $300"};
+    std::print("available cores: ");
+    for (int i = 0; i < available_cores.size(); i++) {
+        std::cout << available_cores[i];
+    }
+    std::println();
 
-    msg_queues["NVDA"]->try_push(msg1);
-    msg_queues["TSLA"]->try_push(msg2);
-    msg_queues["PLTR"]->try_push(msg3);
+    cores.release_core(core_id1);   
 
-    auto a = msg_queues["NVDA"]->try_pop();
-    auto b = msg_queues["TSLA"]->try_pop();
-    auto c = msg_queues["PLTR"]->try_pop();
+    available_cores = cores.current_core_set();
 
-    std::println("{}", a.value);
-    std::println("{}", b.value);
-    std::println("{}", c.value);
+    std::print("available cores: ");
+    for (int i = 0; i < available_cores.size(); i++) {
+        std::cout << available_cores[i];
+    }
+    std::println();
 
 }   

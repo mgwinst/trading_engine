@@ -18,7 +18,7 @@ namespace L2
 
     void OrderBook::process_order(Action action, const Price price, const Volume volume, const Side side) noexcept
     {
-        if (side == Side::Bid)
+        if (side == 'B')
             return process_order(action, bid_levels_, price, volume, std::less<Price>());
         else
             return process_order(action, ask_levels_, price, volume, std::greater<Price>());

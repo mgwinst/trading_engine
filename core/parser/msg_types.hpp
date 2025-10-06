@@ -286,3 +286,22 @@ struct DirectListingWithCapitalRaisePriceDiscoveryMessage
     uint32_t lower_price_range_collar;
     uint32_t upper_price_range_collar;
 } __attribute__((packed));
+
+using MessageVariant = std::variant<
+    std::monostate,
+    SystemEventMessage,
+    StockDirectoryMessage,
+    AddOrderMessage,
+    OrderCancelMessage,
+    OrderDeleteMessage,
+    OrderReplaceMessage
+>;
+
+alignas(8) struct ExchangeMessage
+{
+    std::size_t type_index;
+    MessageVariant payload;
+
+    constexpr ExchangeMessage(std::size_t idx, MessageVariant&& p) noexcept :
+        type_index{ idx }, payload{ std::move(p) } {}
+};

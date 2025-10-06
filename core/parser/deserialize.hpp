@@ -1,15 +1,13 @@
 #pragma once
 
+#include <bit>
 #include <type_traits>
 #include <cstring>
-#include <bit>
+#include <array>
+#include <cstddef>
 
-#include "itch/moldudp64.hpp"
-#include "itch/msg_types.hpp"
-
-
-// void simd_parse_mold_packet(moldhdr* mold_hdr);
-void parse_mold_packet(moldhdr* mold_hdr);
+#include "moldudp64.hpp"
+#include "msg_types.hpp"
 
 template <typename T>
 void network_to_host(T& value)

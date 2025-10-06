@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <string>
 #include <memory>
 #include <unordered_map>
 #include <mutex>
@@ -31,7 +33,6 @@ public:
         return message_queues;
     }
 
-
     void add_queues(const std::vector<std::string>& tickers) noexcept
     {
         std::scoped_lock lock{mtx_};
@@ -56,5 +57,3 @@ private:
     mutable std::mutex mtx_{};
     std::unordered_map<std::string, QueueHandle> queues_;
 };
-
-

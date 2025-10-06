@@ -1,25 +1,27 @@
-#include <thread>
-#include <string_view>
+#pragma once
 
+#include <unordered_map>
+#include <string>
+#include <vector>
+#include <memory>
+
+#include "common/queues/MessageQueues.hpp"
+#include "network/socket/feed_handler.hpp"
 #include "orderbook/L2/orderbook.hpp"
-
 
 class OrderbookManager
 {
-public:
-    OrderbookManager(std::vector<std::string> tickers)
-    {
+public:   
+    OrderbookManager(const std::vector<std::string>& tickers);
 
-    }
-
-    void add_orderbook(std::string_view ticker)
-    {
-        
-    }
-
-
-    
+    OrderbookManager(const OrderbookManager&) = delete;
+    OrderbookManager& operator=(const OrderbookManager&) = delete;
+    OrderbookManager(OrderbookManager&&) = default;
+    OrderbookManager& operator=(OrderbookManager&&) = default;
+    ~OrderbookManager() = default;
 
 private:
-    // std::vector<std::thread *> orderbook_threads;
+    std::unordered_map<std::string, L2::OrderBook> orderbooks;
+    std::vector<std::unique_ptr<std::thread>> managers;
+
 };

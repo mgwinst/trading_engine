@@ -13,8 +13,8 @@
 
 #include "common/macros.hpp"
 #include "network/socket/socket_utils.hpp"
-#include "itch/moldudp64.hpp"
-#include "itch/msg_parser.hpp"
+#include "parser/moldudp64.hpp"
+#include "parser/msg_parser.hpp"
 
 #define BLOCK_SIZE (2 * 1024 * 1024)
 #define BLOCK_COUNT 8

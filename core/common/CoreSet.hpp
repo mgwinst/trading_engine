@@ -8,6 +8,8 @@
 
 #define TOTAL_CORES 16
 
+using CoreID = int;
+
 class CoreSet
 {
 public:

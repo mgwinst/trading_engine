@@ -100,18 +100,6 @@ std::array<uint8_t, 10>& get_session()
     return session;
 }
 
-constexpr std::size_t get_variant_index(char key) {
-    switch (key) {
-        case 'S': return 1;
-        case 'R': return 2;
-        case 'A': return 3;
-        case 'X': return 4;
-        case 'D': return 5;
-        case 'U': return 6;
-        default: return 0;
-    }
-}
-
 void parse_mold_packet(moldhdr* mold_hdr)
 {
     auto msg_count = std::byteswap(mold_hdr->msg_count);
@@ -129,10 +117,9 @@ void parse_mold_packet(moldhdr* mold_hdr)
         char msg_type = msg->data[0]; // first field in message byte stream
 
         auto msg_variant = msg_handlers[msg_type](msg);
-        auto idx = get_variant_index(msg_type);
 
         // std::string_view ticker = (extract from msg_variant)
-        // queues[ticker]->try_push(ExchangeMessage{idx, std::move(msg_variant)});
+        // queues[ticker]->try_push(std::move(msg_variant));
 
         msg = reinterpret_cast<msgblk *>(reinterpret_cast<uint8_t *>(msg) + msg->msg_len + sizeof(msg->msg_len));
     }

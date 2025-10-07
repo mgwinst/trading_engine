@@ -21,5 +21,3 @@ MessageVariant replace_order_handler(msgblk* msg);
 
 constexpr std::size_t num_handlers{ 256 };
 const std::array<MessageHandler, num_handlers>& get_msg_handler_table();
-
-constexpr std::size_t get_variant_index(char key);

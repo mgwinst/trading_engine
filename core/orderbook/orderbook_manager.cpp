@@ -1,51 +1,58 @@
-#include "filesystem"
+#include <filesystem>
 
 #include "orderbook/orderbook_manager.hpp"
 #include "parser/msg_types.hpp"
 #include "common/json_parser.hpp"
 #include "common/thread_utils.hpp"
+#include "common/CoreSet.hpp"
 
-OrderbookManager::OrderbookManager() : running_{ true }
+OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : running_{ true }
 {
-    std::filesystem::path config_path = std::getenv("TRADING_ENGINE_HOME");
-    config_path /= "config.json";
-    if (config_path.empty())
-        throw std::runtime_error{ "config.json file not found" };
-    auto tickers = parse_tickers_from_json(config_path.string());
+    auto& msg_queues = MessageQueues<MessageVariant>::get_instance();
+    msg_queues.add_queues(tickers); // check for duplicate queues?
 
-    auto& msg_queues = MessageQueues<ExchangeMessage>::get_instance();
-    msg_queues.add_queues(*tickers);
-
-    for (const auto& ticker : *tickers) {
+    for (auto ticker : tickers) {
         orderbooks_.emplace(ticker, L2::OrderBook{});
 
         auto orderbook_worker = [this, ticker, &msg_queues] {
-
             while (running_.load()) {
-
-                ExchangeMessage msg{};
+                MessageVariant msg{};
                 while (msg_queues[ticker]->try_pop(msg)) {
-
-                    switch (msg.type_index_) {
+                    switch (msg.index()) {
                         case 3: {
-                            auto& add_order = std::get<3>(msg.payload_);
+                            auto& add_order = std::get<3>(msg);
                             orderbooks_.at(ticker).process_order(Action::Add, add_order.price, add_order.num_shares, add_order.side);
                             break;
                         }
-
-                        // all other cases...
                     }
                 }
             }
         };
 
-        auto available_cores = get_all_cores();
-        auto core = available_cores.pick_one(); // this will decrement from global pool of available cores that threads can choose from to set affinity on?
+        while (true) {
+            auto core_id = CoreSet::instance().claim_core();
+            claimed_cores_.push_back(core_id);
 
-        auto* orderbook_thread = common::create_and_pin_thread()
+            auto orderbook_thread = common::create_and_pin_thread(core_id, orderbook_worker);
 
+            if (!orderbook_thread.has_value()) {
+                auto core_id = claimed_cores_.back();
+                CoreSet::instance().release_core(core_id);
+                claimed_cores_.pop_back();
+            } else {
+                orderbook_threads_.push_back(std::move(*orderbook_thread));
+                break;
+            }
+        }
 
+    }
+}
 
+OrderbookManager::~OrderbookManager()
+{
+    running_.store(false);
 
+    for (const auto& core_id : claimed_cores_) {
+        CoreSet::instance().release_core(core_id);
     }
 }

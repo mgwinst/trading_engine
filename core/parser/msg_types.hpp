@@ -296,22 +296,3 @@ using MessageVariant = std::variant<
     OrderDeleteMessage,
     OrderReplaceMessage
 >;
-
-alignas(8) struct ExchangeMessage
-{
-    std::size_t type_index_;
-    MessageVariant payload_;
-
-    constexpr ExchangeMessage() noexcept : type_index_{ 0 }, payload_{ std::monostate{} } {}
-
-    constexpr ExchangeMessage(std::size_t idx, MessageVariant&& p) noexcept :
-        type_index_{ idx }, payload_{ std::move(p) } {}
-        
-    constexpr ExchangeMessage& operator=(ExchangeMessage&& other) noexcept
-    {
-        type_index_ = other.type_index_;
-        payload_ = std::move(other.payload_);
-
-        return *this;
-    }
-};

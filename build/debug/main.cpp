@@ -8,47 +8,31 @@
 #include <string>
 #include <array>
 
-/*
 #include "common/queues/MessageQueues.hpp"
 #include "common/thread_utils.hpp"
 #include "common/json_parser.hpp"
+#include "common/CoreSet.hpp"
 #include "network/socket/raw_socket.hpp"
 #include "network/socket/feed_handler.hpp"
 #include "orderbook/orderbook_manager.hpp"
 #include "parser/msg_types.hpp"
-*/
-
-#include "common/CoreSet.hpp"
-
 
 int main()
 {
-    auto& cores = CoreSet::instance();
+    std::filesystem::path config_path = std::getenv("TRADING_ENGINE_HOME");
+    config_path /= "config.json";
+    if (config_path.empty())
+        throw std::runtime_error{ "config.json file not found" };
     
-    auto core_id0 = cores.claim_core();
-    auto core_id1 = cores.claim_core();
-    auto core_id2 = cores.claim_core();
+    auto interface = parse_interface_from_json(config_path.string());
+    auto tickers = parse_tickers_from_json(config_path.string());   
 
-    std::cout << "coreid0 " << core_id0 << std::endl;
-    std::cout << "coreid1 " << core_id1 << std::endl;
-    std::cout << "coreid2 " << core_id2 << std::endl;
+    auto socket = std::make_shared<network::RawSocket>(*interface);
+    auto feed_handler = std::make_shared<network::FeedHandler>(socket);
 
-    auto available_cores = cores.current_core_set();
+    // feed_handler->start_rx();
+    // feed_handler->stop_rx();
 
-    std::print("available cores: ");
-    for (int i = 0; i < available_cores.size(); i++) {
-        std::cout << available_cores[i];
-    }
-    std::println();
-
-    cores.release_core(core_id1);   
-
-    available_cores = cores.current_core_set();
-
-    std::print("available cores: ");
-    for (int i = 0; i < available_cores.size(); i++) {
-        std::cout << available_cores[i];
-    }
-    std::println();
+    auto orderbooks = std::make_shared<OrderbookManager>(*tickers);
 
 }   

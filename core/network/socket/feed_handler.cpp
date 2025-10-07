@@ -1,5 +1,7 @@
+#include "network/socket/feed_handler.hpp"
 #include "common/thread_utils.hpp"
-#include "feed_handler.hpp"
+#include "common/json_parser.hpp"
+#include "common/CoreSet.hpp"
 
 namespace network
 {
@@ -47,23 +49,27 @@ namespace network
             }
         };
 
-        auto core_id = 0;
-        std::thread* rxt = common::create_and_pin_thread(core_id, rx_loop);
-        rx_thread_ = std::unique_ptr<std::thread>{ rxt };
+        while (true) {
+            auto core_id = CoreSet::instance().claim_core();
+            claimed_core_ = core_id;
+
+            auto rxt = common::create_and_pin_thread(core_id, rx_loop);
+
+            if (!rxt.has_value()) {
+                CoreSet::instance().release_core(claimed_core_);
+                claimed_core_ = -1;
+            } else {
+                rx_thread_ = std::move(*rxt);
+                break;
+            }
+        }
     }
 
     void FeedHandler::stop_rx()
     {
         running_.store(false);
 
-        if (rx_thread_ && rx_thread_->joinable())
-            rx_thread_->join();
-    }
-
-    std::shared_ptr<FeedHandler> make_feed_handler(std::string_view iface)
-    {
-        auto socket = std::make_shared<RawSocket>(iface);
-        return std::make_shared<FeedHandler>(socket);
+        CoreSet::instance().release_core(claimed_core_);
     }
 
 } // namespace network

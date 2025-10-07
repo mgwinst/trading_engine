@@ -9,7 +9,8 @@
 #include <atomic>
 #include <thread>
 
-#include "raw_socket.hpp"
+#include "network/socket/raw_socket.hpp"
+#include "common/CoreSet.hpp"
 
 namespace network
 {
@@ -17,6 +18,7 @@ namespace network
     {
     public:
         FeedHandler(std::shared_ptr<RawSocket>& socket);
+
         ~FeedHandler();
 
         FeedHandler(const FeedHandler&) = delete; 
@@ -30,13 +32,12 @@ namespace network
     private:
         std::atomic<bool> running_{ false };
         std::shared_ptr<RawSocket> rx_socket_;
-        std::unique_ptr<std::thread> rx_thread_;
+        std::jthread rx_thread_;
+        CoreID claimed_core_;
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
     };
-
-    std::shared_ptr<FeedHandler> make_feed_handler(std::string_view iface);
     
 } // namespace network

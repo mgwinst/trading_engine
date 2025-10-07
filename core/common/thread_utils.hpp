@@ -17,7 +17,7 @@ namespace common {
     }
     
     template <typename F, typename... Args>
-    inline std::thread* create_and_pin_thread(int core_id, F&& func, Args&&... args) noexcept {
+    inline std::optional<std::jthread> create_and_pin_thread(int core_id, F&& func, Args&&... args) noexcept {
         std::atomic_bool running, failed;
         
         auto thread_body = [&] {
@@ -29,23 +29,21 @@ namespace common {
 
             std::print("set core affinity for {} to core {}\n", pthread_self(), core_id);
             running = true;
-            std::forward<F>(func) ((std::forward<Args>(args))...);
+            std::invoke(std::forward<F>(func), std::forward<Args>(args)...);
         };
 
-        std::thread* t = new std::thread{ thread_body };
+        auto t = std::jthread{ thread_body };
  
-        using namespace std::chrono;
+        using namespace std::chrono_literals;
         while (!running && !failed) {
-            std::this_thread::sleep_for(milliseconds(100));
+            std::this_thread::sleep_for(100ms);
         }
 
         if (failed) {
-            t->join();
-            delete t;
-            t = nullptr;
+            return std::nullopt;
         }
 
-        return t;
+        return std::move(t);
     };
 
     

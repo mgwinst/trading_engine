@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <set>
 
 #include "common/queues/MessageQueues.hpp"
 #include "network/socket/feed_handler.hpp"
@@ -13,17 +14,17 @@
 class OrderbookManager
 {
 public:   
-    OrderbookManager();
+    OrderbookManager(const std::vector<std::string>& tickers);
     ~OrderbookManager();
 
     OrderbookManager(const OrderbookManager&) = delete;
     OrderbookManager& operator=(const OrderbookManager&) = delete;
-    OrderbookManager(OrderbookManager&&) = default;
-    OrderbookManager& operator=(OrderbookManager&&) = default;
+    OrderbookManager(OrderbookManager&&) = delete;
+    OrderbookManager& operator=(OrderbookManager&&) = delete;
 
 private:
-    std::unordered_map<std::string, L2::OrderBook> orderbooks_;
-    std::vector<std::unique_ptr<std::thread>> managers_;
-
     std::atomic<bool> running_{ false };
+    std::vector<std::jthread> orderbook_threads_;
+    std::unordered_map<std::string, L2::OrderBook> orderbooks_;
+    std::vector<CoreID> claimed_cores_;
 };

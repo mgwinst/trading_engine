@@ -69,6 +69,23 @@ public:
         return true;
     }
 
+    T try_pop()
+    {
+        auto read_pointer = read_pointer_.load(std::memory_order_relaxed);
+        if (empty(cached_write_pointer_, read_pointer)) {
+            cached_write_pointer_ = write_pointer_.load(std::memory_order::acquire);
+            if (empty(cached_write_pointer_, read_pointer)) {
+                return {};
+            }
+        }
+        
+        auto value = *element(read_pointer);
+        element(read_pointer)->~T();
+        read_pointer_.store(read_pointer + 1, std::memory_order_release);
+
+        return value;
+    }   
+
     bool try_pop(T& output)
     {
         auto read_pointer = read_pointer_.load(std::memory_order_relaxed);

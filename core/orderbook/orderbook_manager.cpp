@@ -8,7 +8,7 @@
 
 OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : running_{ true }
 {
-    auto& msg_queues = MessageQueues<MessageVariant>::get_instance();
+    auto& msg_queues = MessageQueues<MessageVariant>::instance();
     msg_queues.add_queues(tickers); // check for duplicate queues?
 
     for (auto ticker : tickers) {
@@ -16,8 +16,10 @@ OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : ru
 
         auto orderbook_worker = [this, ticker, &msg_queues] {
             while (running_.load()) {
+
                 MessageVariant msg{};
                 while (msg_queues[ticker]->try_pop(msg)) {
+
                     switch (msg.index()) {
                         case 3: {
                             auto& add_order = std::get<3>(msg);
@@ -44,7 +46,6 @@ OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : ru
                 break;
             }
         }
-
     }
 }
 

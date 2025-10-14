@@ -10,12 +10,12 @@
 
 #include "common/queues/MessageQueues.hpp"
 
-MessageVariant empty_handler(msgblk* msg)
+MessageVariant empty_handler(itchmsg* msg)
 {
     return std::monostate{};
 }
 
-MessageVariant system_event_handler(msgblk* msg)
+MessageVariant system_event_handler(itchmsg* msg)
 {
     auto system_event = deserialize<SystemEventMessage>(msg);
 
@@ -41,9 +41,13 @@ MessageVariant system_event_handler(msgblk* msg)
         default:
             break;
     }
+
+    return system_event;
 }
 
-MessageVariant stock_directory_handler(msgblk* msg)
+using StockLocateMap = std::unordered_map<int16_t, std::string>;
+
+MessageVariant stock_directory_handler(itchmsg* msg)
 {
     auto stock_directory_message = deserialize<StockDirectoryMessage>(msg);
     // stock_directory_message.stock_locate
@@ -52,32 +56,34 @@ MessageVariant stock_directory_handler(msgblk* msg)
     return stock_directory_message;
 }
 
-MessageVariant add_order_handler(msgblk* msg)
+MessageVariant add_order_handler(itchmsg* msg)
 {
     return deserialize<AddOrderMessage>(msg);
 }
 
-MessageVariant cancel_order_handler(msgblk* msg)
+MessageVariant cancel_order_handler(itchmsg* msg)
 {   
     return deserialize<OrderCancelMessage>(msg);
 }
 
-MessageVariant delete_order_handler(msgblk* msg)
+MessageVariant delete_order_handler(itchmsg* msg)
 {
     return deserialize<OrderDeleteMessage>(msg);
 }
 
-MessageVariant replace_order_handler(msgblk* msg)
+MessageVariant replace_order_handler(itchmsg* msg)
 {
     return deserialize<OrderReplaceMessage>(msg);
 }
 
 const std::array<MessageHandler, num_handlers>& get_msg_handler_table()
 {
-    static constexpr std::array<MessageHandler, num_handlers> msg_handler_table = []() constexpr {
+    static std::array<MessageHandler, num_handlers> msg_handler_table = []() {
         std::array<MessageHandler, num_handlers> temp_table;
         
-        temp_table.fill(&empty_handler);
+        for (auto& h : temp_table) {
+            h = &empty_handler;
+        }
 
         temp_table['S'] = &system_event_handler;
         temp_table['R'] = &stock_directory_handler;
@@ -90,39 +96,6 @@ const std::array<MessageHandler, num_handlers>& get_msg_handler_table()
     }();
 
     return msg_handler_table;
-}
-
-using StockLocateMap = std::unordered_map<int16_t, std::string>;
-
-std::array<uint8_t, 10>& get_session()
-{
-    static std::array<uint8_t, 10> session;
-    return session;
-}
-
-void parse_mold_packet(moldhdr* mold_hdr)
-{
-    auto msg_count = std::byteswap(mold_hdr->msg_count);
-    if (msg_count == 0x0000) [[unlikely]] {
-        // heartbeat
-    } else if (msg_count == 0xFFFF) [[unlikely]] {
-        // end of session
-    }
-
-    const auto msg_handlers = get_msg_handler_table();
-
-    for (std::size_t i = 0; i < mold_hdr->msg_count; i++) {
-        msgblk* msg = mold_hdr->msg_blk;
-        
-        char msg_type = msg->data[0]; // first field in message byte stream
-
-        auto msg_variant = msg_handlers[msg_type](msg);
-
-        // std::string_view ticker = (extract from msg_variant)
-        // queues[ticker]->try_push(std::move(msg_variant));
-
-        msg = reinterpret_cast<msgblk *>(reinterpret_cast<uint8_t *>(msg) + msg->msg_len + sizeof(msg->msg_len));
-    }
 }
 
 /*

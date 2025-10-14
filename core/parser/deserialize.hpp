@@ -6,8 +6,8 @@
 #include <array>
 #include <cstddef>
 
-#include "moldudp64.hpp"
-#include "msg_types.hpp"
+#include "parser/BinaryFILE.hpp"
+#include "parser/msg_types.hpp"
 
 template <typename T>
 void network_to_host(T& value)
@@ -67,10 +67,10 @@ inline void network_to_host<OrderReplaceMessage>(OrderReplaceMessage& value)
 
 template <typename T>
 requires std::is_trivial_v<T>
-T deserialize(msgblk* msg)
+T deserialize(itchmsg* itch_msg) [[nodiscard]]
 {
     alignas(T) std::array<std::byte, sizeof(T)> buffer;
-    std::memcpy(buffer.data(), msg->data, sizeof(T));
+    std::memcpy(buffer.data(), itch_msg->data, sizeof(T));
     auto value = std::bit_cast<T>(buffer);
 
     network_to_host(value);

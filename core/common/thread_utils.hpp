@@ -6,6 +6,7 @@
 #include <atomic>
 #include <unistd.h>
 #include <chrono>
+#include <functional>
 
 namespace common {
 

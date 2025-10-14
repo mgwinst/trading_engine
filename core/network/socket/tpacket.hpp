@@ -13,7 +13,6 @@
 
 #include "common/macros.hpp"
 #include "network/socket/socket_utils.hpp"
-#include "parser/moldudp64.hpp"
 #include "parser/msg_parser.hpp"
 
 #define BLOCK_SIZE (2 * 1024 * 1024)
@@ -84,12 +83,37 @@ inline void process_block(tpacket_block_desc* block_desc)
     tpacket3_hdr* tpkt_hdr = reinterpret_cast<tpacket3_hdr *>((reinterpret_cast<uint8_t *>(block_desc) + block_desc->hdr.bh1.offset_to_first_pkt));
 
     for (std::size_t i = 0; i < num_pkts; i++) {
-        ethhdr* eth_hdr = reinterpret_cast<ethhdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_mac);
-        iphdr* ip_hdr = reinterpret_cast<iphdr *>(reinterpret_cast<uint8_t *>(eth_hdr) + sizeof(eth_hdr));
-        udphdr* udp_hdr = reinterpret_cast<udphdr *>(reinterpret_cast<uint8_t *>(ip_hdr) + (ip_hdr->ihl * 4));
-        moldhdr* mold_hdr = reinterpret_cast<moldhdr *>(reinterpret_cast<uint8_t *>(udp_hdr) + sizeof(udp_hdr));
 
-        // parse_mold_packet(mold_hdr);
+        // have to byteswap all fields to little-endian
+        ethhdr* eth_hdr = reinterpret_cast<ethhdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_mac);
+        iphdr* ip_hdr = reinterpret_cast<iphdr *>(reinterpret_cast<uint8_t *>(eth_hdr) + sizeof(ethhdr));
+        udphdr* udp_hdr = reinterpret_cast<udphdr *>(reinterpret_cast<uint8_t *>(ip_hdr) + (ip_hdr->ihl * 4));
+        itchmsg* itch_msg = reinterpret_cast<itchmsg *>(reinterpret_cast<uint8_t *>(udp_hdr) + sizeof(udphdr));
+
+        std::size_t payload_len = ntohs(udp_hdr->len) - sizeof(udphdr);
+        
+        while (payload_len > 0) {
+            auto msg_len = std::byteswap(itch_msg->len);
+            if (msg_len == 0x0000) [[unlikely]] {
+                // end of session
+            }
+
+            const auto& msg_handlers = get_msg_handler_table();
+
+            // can we use msg_type char to hint to compiler that the msg_variant will be of certain type
+            // intead of calling .index() and potentially missing that branch prediction?
+            
+            char msg_type = static_cast<char>(itch_msg->data[0]);
+            
+            auto msg_variant = msg_handlers[msg_type](itch_msg);
+
+            // std::string_view ticker = (extract from msg_variant)
+            // queues[ticker]->try_push(std::move(msg_variant));
+
+            itch_msg = reinterpret_cast<itchmsg *>(reinterpret_cast<uint8_t *>(itch_msg) + sizeof(itchmsg) + msg_len);
+
+            payload_len -= msg_len;
+        }
 
         tpkt_hdr = reinterpret_cast<tpacket3_hdr *>(reinterpret_cast<uint8_t *>(tpkt_hdr) + tpkt_hdr->tp_next_offset);
     }

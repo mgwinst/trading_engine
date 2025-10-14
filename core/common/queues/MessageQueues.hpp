@@ -27,7 +27,7 @@ public:
         return queues_.at(key);
     }
 
-    static MessageQueues& get_instance() noexcept
+    static MessageQueues& instance() noexcept
     {
         static MessageQueues message_queues;
         return message_queues;

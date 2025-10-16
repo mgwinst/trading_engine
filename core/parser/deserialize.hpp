@@ -67,7 +67,7 @@ inline void network_to_host<OrderReplaceMessage>(OrderReplaceMessage& value)
 
 template <typename T>
 requires std::is_trivial_v<T>
-T deserialize(itchmsg* itch_msg) [[nodiscard]]
+[[nodiscard]] T deserialize(itchmsg* itch_msg) 
 {
     alignas(T) std::array<std::byte, sizeof(T)> buffer;
     std::memcpy(buffer.data(), itch_msg->data, sizeof(T));

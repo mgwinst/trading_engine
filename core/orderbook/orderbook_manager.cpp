@@ -12,7 +12,7 @@ OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : ru
     msg_queues.add_queues(tickers); // check for duplicate queues?
 
     for (auto ticker : tickers) {
-        orderbooks_.emplace(ticker, L2::OrderBook{});
+        orderbooks_.emplace(ticker, OrderBook{});
 
         auto orderbook_worker = [this, ticker, &msg_queues] {
             while (running_.load()) {

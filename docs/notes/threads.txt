@@ -1,6 +1,0 @@
-*** THREADS *** 
-
-
-setting thread affinity -> pinning certain critical path threads to specific cores to reduce context switching, cache misses
-
-        

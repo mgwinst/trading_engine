@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/matteo/trading_engine/build/debug/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -5,6 +5,6 @@
   },
 
   "engine": {
-    "tickers": ["TSLA", "NVDA", "PLTR"]
+    "tickers": ["TSLA", "NVDA", "AAPL"]
   }
 }

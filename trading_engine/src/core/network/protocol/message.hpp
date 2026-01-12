@@ -103,7 +103,7 @@ struct Offset<Execute>
 
 template <typename T>
 requires std::same_as<T, Add>
-FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg) noexcept
 {
     msg.msg_type  = (uint8_t) p[Offset<Add>::TYPE];
     msg.symbol_id = load_be<uint16_t>(p + Offset<Add>::LOCATE);
@@ -115,7 +115,7 @@ FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
 
 template <typename T>
 requires std::same_as<T, Cancel>
-FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg) noexcept
 {
     msg.msg_type  = (uint8_t) p[Offset<Cancel>::TYPE];
     msg.symbol_id = load_be<uint16_t>(p + Offset<Cancel>::LOCATE);
@@ -125,7 +125,7 @@ FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
 
 template <typename T>
 requires std::same_as<T, Delete>
-FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg) noexcept
 {
     msg.msg_type  = (uint8_t) p[Offset<Delete>::TYPE];
     msg.symbol_id = load_be<uint16_t>(p + Offset<Delete>::LOCATE);
@@ -134,7 +134,7 @@ FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
 
 template <typename T>
 requires std::same_as<T, Replace>
-FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg) noexcept
 {
     msg.msg_type  = (uint8_t) p[Offset<Replace>::TYPE];
     msg.symbol_id = load_be<uint16_t>(p + Offset<Replace>::LOCATE);
@@ -145,7 +145,7 @@ FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
 
 template <typename T>
 requires std::same_as<T, Execute>
-FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg) noexcept
 {
     msg.msg_type = (uint8_t) p[Offset<Execute>::TYPE];
     msg.msg_type = load_be<uint16_t>(p + Offset<Execute>::LOCATE);
@@ -153,7 +153,7 @@ FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
     msg.qty      = load_be<uint32_t>(p + Offset<Execute>::QTY);
 }
 
-FORCE_INLINE __attribute__((flatten)) void process_msg(itchmsg* __restrict__ itch_msg, Message& msg)
+FORCE_INLINE __attribute__((flatten)) void process_msg(itchmsg* __restrict__ itch_msg, Message& msg) noexcept
 {
     const std::byte* __restrict__ p = reinterpret_cast<const std::byte*>(itch_msg->data);
 

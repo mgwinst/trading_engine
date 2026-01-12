@@ -1,18 +1,5 @@
-#include "../../core/common/json_parser.hpp"
-#include "../../core/network/socket/feed_handler.hpp"
-#include "../../core/common/macros.hpp"
-
 int main()
 {
-    auto interface = parse_interface_from_json("../../config.json");
-
-    if (!interface)
-        error_exit("interface does not exist");
-
-    auto feed_handler = network::FeedHandler(*interface);
-
-    
-
 
 }
 

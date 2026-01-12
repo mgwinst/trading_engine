@@ -1,0 +1,5 @@
+/home/matteo/trading_engine/build/debug/CMakeFiles/engine_lib.dir
+/home/matteo/trading_engine/build/debug/CMakeFiles/engine.dir
+/home/matteo/trading_engine/build/debug/CMakeFiles/check.dir
+/home/matteo/trading_engine/build/debug/CMakeFiles/edit_cache.dir
+/home/matteo/trading_engine/build/debug/CMakeFiles/rebuild_cache.dir

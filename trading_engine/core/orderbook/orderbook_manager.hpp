@@ -6,7 +6,8 @@
 #include <atomic>
 #include <thread>
 
-#include "L2/orderbook.hpp"
+#include "orderbook.hpp"
+#include "../network/protocol/message.hpp"
 #include "../common/CoreSet.hpp"
 
 class OrderbookManager
@@ -23,6 +24,6 @@ public:
 private:
     std::atomic<bool> running_{ false };
     std::vector<std::jthread> orderbook_threads_;
-    std::unordered_map<std::string, OrderBook> orderbooks_;
+    std::unordered_map<Symbol, OrderBook> orderbooks_;
     std::vector<CoreID> claimed_cores_;
 };

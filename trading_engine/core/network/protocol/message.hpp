@@ -1,315 +1,171 @@
 #pragma once
 
+#include <bit>
+#include <cstddef>
 #include <cstdint>
-#include <variant>
+#include <cstring>
 
-struct SystemEventMessage
-{
-    uint8_t type; // 'S'
-    uint16_t stock_locate; // Always 0
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t event_code; // 'O', 'S', 'Q', 'M', 'E', 'C'
-} __attribute__((packed));
-
-// important for mapping equities for the trading day
-struct StockDirectoryMessage
-{
-    uint8_t type; // 'R'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t market_category; // 'Q', 'G', 'S', 'N', 'A', 'P', 'Z', 'V', or ' '
-    uint8_t financial_status_indicator; // 'D', 'E', 'Q', 'S', 'G', 'H', 'J', 'K', 'C', 'N', or ' '
-    uint32_t round_lot_size;
-    uint8_t round_lots_only; // 'Y' or 'N'
-    uint8_t issue_classification;
-    uint8_t issue_sub_type[2];
-    uint8_t authenticity; // 'P' or 'T'
-    uint8_t short_sale_threshold_indicator; // 'Y', 'N', or ' '
-    uint8_t ipo_flag; // 'Y', 'N', or ' '
-    uint8_t luld_reference_price_tier; // '1', '2', or ' '
-    uint8_t etp_flag; // 'Y', 'N', or ' '
-    uint32_t etp_leverage_factor;
-    uint8_t inverse_indicator; // 'Y' or 'N'
-} __attribute__((packed));
-
-struct StockTradingActionMessage
-{
-    uint8_t type; // 'H'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t trading_state; // 'H', 'P', 'Q', 'T'
-    uint8_t reserved;
-    uint8_t reason[4];
-} __attribute__((packed));
-
-struct RegSHORestrictionMessage
-{
-    uint8_t type; // 'Y'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t reg_sho_action; // '0', '1', '2'
-} __attribute__((packed));
-
-struct MarketParticipantPositionMessage
-{
-    uint8_t type; // 'L'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t mpid[4];
-    uint8_t symbol[8];
-    uint8_t primary_market_maker; // 'Y' or 'N'
-    uint8_t market_maker_mode; // 'N', 'P', 'S', 'R', 'L'
-    uint8_t market_participant_state; // 'A', 'E', 'W', 'S', 'D'
-} __attribute__((packed));
-
-struct MWCBDeclineLevelMessage
-{
-    uint8_t type; // 'V'
-    uint16_t stock_locate; // always 0
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t level_1;
-    uint64_t level_2;
-    uint64_t level_3;
-} __attribute__((packed));
-
-struct MWCBStatusMessage
-{
-    uint8_t type; // 'W'
-    uint16_t stock_locate; // always 0
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t breached_level; // '1', '2', '3'
-} __attribute__((packed));
-
-struct QuotingPeriodUpdateMessage
-{
-    uint8_t type; // 'K'
-    uint16_t stock_locate; // Always 0
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint32_t ipo_quotation_release_time; // seconds since midnight
-    uint8_t ipo_quotation_release_qualifier; // 'A' or 'C'
-    uint32_t ipo_price;
-} __attribute__((packed));
-
-struct LULDAuctionCollarMessage
-{
-    uint8_t type; // 'J'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint32_t auction_collar_reference_price;
-    uint32_t upper_auction_collar_price;
-    uint32_t lower_auction_collar_price;
-    uint32_t auction_collar_extension;
-} __attribute__((packed));
-
-struct OperationalHaltMessage
-{
-    uint8_t type; // 'h'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t market_code; // 'Q', 'B', 'X'
-    uint8_t operational_halt_action; // 'H' or 'T'
-} __attribute__((packed));
-
-struct AddOrderMessage
-{
-    uint8_t type; // 'A'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint8_t side;
-    uint32_t num_shares;
-    uint8_t symbol[8];
-    uint32_t price;
-} __attribute__((packed));
-
-struct AddOrderMPIDMessage
-{
-    uint8_t type; // 'F'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint8_t side;
-    uint32_t num_shares;
-    uint8_t symbol[8];
-    uint32_t price;
-    uint8_t mpid_attribute[4];
-} __attribute__((packed));
-
-struct OrderExecutedMessage
-{
-    uint8_t type; // 'E'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint32_t num_executed_shares;
-    uint64_t match_number;
-} __attribute__((packed));
-
-struct OrderExecutedWithPriceMessage
-{
-    uint8_t type; // 'C'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint32_t executed_shares;
-    uint64_t match_number;
-    uint8_t printable; // 'Y' or 'N'
-    uint32_t execution_price;
-} __attribute__((packed));
-
-struct OrderCancelMessage
-{
-    uint8_t type; // 'X'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint32_t num_cancelled_shares;
-} __attribute__((packed));
-
-struct OrderDeleteMessage
-{
-    uint8_t type; // 'D'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-} __attribute__((packed));
-
-struct OrderReplaceMessage
-{
-    uint8_t type; // 'U'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t original_reference_number;
-    uint64_t new_reference_number;
-    uint32_t num_shares;
-    uint32_t price;
-} __attribute__((packed));
-
-struct NonCrossTradeMessage
-{
-    uint8_t type; // 'P'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t reference_number;
-    uint8_t side; // 'B' or 'S'
-    uint32_t num_shares;
-    uint8_t symbol[8];
-    uint32_t price;
-    uint64_t match_number;
-} __attribute__((packed));
-
-struct CrossTradeMessage
-{
-    uint8_t type; // 'Q'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t num_shares;
-    uint8_t symbol[8];
-    uint32_t cross_price;
-    uint64_t match_number;
-    uint8_t cross_type; // 'O', 'C', 'H'
-} __attribute__((packed));
-
-struct BrokenTradeMessage
-{
-    uint8_t type; // 'B'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t match_number;
-} __attribute__((packed));
-
-struct NOIIMessage
-{
-    uint8_t type; // 'I'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint64_t num_paired_shares;
-    uint64_t num_imbalanced_shares;
-    uint8_t imbalance_direction;
-    uint8_t symbol[8];
-    uint32_t far_price;
-    uint32_t near_price;
-    uint32_t current_reference_price;
-    uint8_t cross_type;
-    uint8_t price_variation_indicator;
-} __attribute__((packed));
-
-struct RPPIMessage
-{
-    uint8_t type; // 'N'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t interest_flag;
-} __attribute__((packed));
-
-struct DirectListingWithCapitalRaisePriceDiscoveryMessage
-{
-    uint8_t type; // 'O'
-    uint16_t stock_locate;
-    uint16_t tracking_number;
-    uint8_t timestamp[6];
-    uint8_t symbol[8];
-    uint8_t open_eligibility_status;
-    uint32_t min_allowable_price;
-    uint32_t max_allowable_price;
-    uint32_t near_execution_price;
-    uint64_t near_execution_time;
-    uint32_t lower_price_range_collar;
-    uint32_t upper_price_range_collar;
-} __attribute__((packed));
-
-// sizeof(Message) == 37 bytes
-using Message = std::variant<
-    AddOrderMessage,
-    OrderCancelMessage,
-    OrderDeleteMessage,
-    OrderReplaceMessage
->;
+#include "../../common/macros.hpp"
+#include "../../common/concepts.hpp"
 
 // https://nasdaqtrader.com/content/technicalSupport/specifications/dataproducts/binaryfile.pdf
 
 struct itchmsg
 {
     uint16_t len;
-    uint8_t data[0];
+    uint8_t data[];
+};
+
+struct alignas(64) Message 
+{
+    uint64_t order_id;
+    uint64_t timestamp;
+    uint32_t price;
+    uint32_t qty;
+    uint16_t symbol_id;
+    uint8_t  msg_type;
+    uint8_t  side;
+};
+
+template <std::integral T>
+[[nodiscard]] FORCE_INLINE T load_be(const std::byte* __restrict__ p) noexcept
+{
+    T value;
+    std::memcpy(&value, p, sizeof(T));
+    return std::byteswap(value);
+}
+
+// tags
+struct Add {};
+struct Cancel {};
+struct Delete {};
+struct Replace {};
+struct Execute {};
+
+template <typename T>
+struct Offset 
+{
+    static_assert(always_false_v<T>, "Offset<T>: no specialization for type T");
+};
+
+template <>
+struct Offset<Add>
+{
+    static constexpr std::size_t TYPE      = 0; // 'A'
+    static constexpr std::size_t LOCATE    = 1;
+    static constexpr std::size_t TIMESTAMP = 5;
+    static constexpr std::size_t ORDER_ID  = 11;
+    static constexpr std::size_t SIDE      = 19;
+    static constexpr std::size_t QTY       = 20;
+    static constexpr std::size_t PRICE     = 32;
+};
+
+template <>
+struct Offset<Cancel>
+{
+    static constexpr std::size_t TYPE      = 0; // 'X'
+    static constexpr std::size_t LOCATE    = 1;
+    static constexpr std::size_t TIMESTAMP = 5;
+    static constexpr std::size_t ORDER_ID  = 11;
+    static constexpr std::size_t QTY       = 19;
+};
+
+template <>
+struct Offset<Delete>
+{
+    static constexpr std::size_t TYPE      = 0; // 'D'
+    static constexpr std::size_t LOCATE    = 1;
+    static constexpr std::size_t TIMESTAMP = 5;
+    static constexpr std::size_t ORDER_ID  = 11;
+};
+
+template <>
+struct Offset<Replace>
+{
+    static constexpr std::size_t TYPE         = 0; // 'U'
+    static constexpr std::size_t LOCATE       = 1;
+    static constexpr std::size_t TIMESTAMP    = 5;
+    static constexpr std::size_t OLD_ORDER_ID = 11;
+    static constexpr std::size_t NEW_ORDER_ID = 19;
+    static constexpr std::size_t QTY          = 27;
+    static constexpr std::size_t PRICE        = 31;
+};
+
+template <>
+struct Offset<Execute>
+{
+    static constexpr std::size_t TYPE         = 0; // 'E'
+    static constexpr std::size_t LOCATE       = 1;
+    static constexpr std::size_t TIMESTAMP    = 5;
+    static constexpr std::size_t ORDER_ID     = 11;
+    static constexpr std::size_t QTY          = 19;
 };
 
 template <typename T>
-concept SupportedMessageType = 
-    std::same_as<T, SystemEventMessage> ||
-    std::same_as<T, StockDirectoryMessage> ||
-    std::same_as<T, AddOrderMessage> ||
-    std::same_as<T, OrderCancelMessage> ||
-    std::same_as<T, OrderDeleteMessage> ||
-    std::same_as<T, OrderReplaceMessage>;
+requires std::same_as<T, Add>
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+{
+    msg.msg_type  = (uint8_t) p[Offset<Add>::TYPE];
+    msg.symbol_id = load_be<uint16_t>(p + Offset<Add>::LOCATE);
+    msg.order_id  = load_be<uint64_t>(p + Offset<Add>::ORDER_ID);
+    msg.price     = load_be<uint32_t>(p + Offset<Add>::PRICE);
+    msg.qty       = load_be<uint32_t>(p + Offset<Add>::QTY);
+    msg.side      = (uint8_t) p[Offset<Add>::SIDE];
+}
 
-using StockLocate = uint16_t;
+template <typename T>
+requires std::same_as<T, Cancel>
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+{
+    msg.msg_type  = (uint8_t) p[Offset<Cancel>::TYPE];
+    msg.symbol_id = load_be<uint16_t>(p + Offset<Cancel>::LOCATE);
+    msg.order_id  = load_be<uint64_t>(p + Offset<Cancel>::ORDER_ID);
+    msg.qty       = load_be<uint32_t>(p + Offset<Cancel>::QTY);
+}
+
+template <typename T>
+requires std::same_as<T, Delete>
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+{
+    msg.msg_type  = (uint8_t) p[Offset<Delete>::TYPE];
+    msg.symbol_id = load_be<uint16_t>(p + Offset<Delete>::LOCATE);
+    msg.order_id  = load_be<uint64_t>(p + Offset<Delete>::ORDER_ID);
+}
+
+template <typename T>
+requires std::same_as<T, Replace>
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+{
+    msg.msg_type  = (uint8_t) p[Offset<Replace>::TYPE];
+    msg.symbol_id = load_be<uint16_t>(p + Offset<Replace>::LOCATE);
+    msg.order_id  = load_be<uint64_t>(p + Offset<Replace>::OLD_ORDER_ID); // need new ID too
+    msg.price     = load_be<uint32_t>(p + Offset<Replace>::PRICE);
+    msg.qty       = load_be<uint32_t>(p + Offset<Replace>::QTY);
+}
+
+template <typename T>
+requires std::same_as<T, Execute>
+FORCE_INLINE void decode(const std::byte* __restrict__ p, Message& msg)
+{
+    msg.msg_type = (uint8_t) p[Offset<Execute>::TYPE];
+    msg.msg_type = load_be<uint16_t>(p + Offset<Execute>::LOCATE);
+    msg.order_id = load_be<uint64_t>(p + Offset<Execute>::ORDER_ID);
+    msg.qty      = load_be<uint32_t>(p + Offset<Execute>::QTY);
+}
+
+FORCE_INLINE __attribute__((flatten)) void process_msg(itchmsg* __restrict__ itch_msg, Message& msg)
+{
+    const std::byte* __restrict__ p = reinterpret_cast<const std::byte*>(itch_msg->data);
+
+    switch (static_cast<char>(p[0])) {
+        case 'A': decode<Add>(p, msg); break;
+        case 'X': decode<Cancel>(p, msg); break;
+        case 'D': decode<Delete>(p, msg); break;
+        case 'U': decode<Replace>(p, msg); break;
+        case 'E': decode<Execute>(p, msg); break;
+        default: break;
+    }
+}
+
+// hot staging a local tmp Message object is useful when we don't yet know if we need it...
+// otherwise, just decode directly into the next open slot in the queue

@@ -1,50 +1,23 @@
 #include "orderbook_manager.hpp"
+#include "symbol_directory.hpp"
 #include "../network/protocol/message.hpp"
 #include "../common/queues/MessageQueuePool.hpp"
 #include "../common/thread_utils.hpp"
 #include "../common/CoreSet.hpp"
 
-// this should not be in constructor (running in ctor?!?!?!)
-OrderbookManager::OrderbookManager(const std::vector<std::string>& tickers) : running_{ true }
+OrderbookManager::OrderbookManager() : running_{ true }
 {
     auto& msg_queues = MessageQueuePool<Message>::instance();
     msg_queues.add_queues(tickers); // check for duplicate queues?
 
-    for (auto ticker : tickers) {
-        orderbooks_.emplace(ticker, OrderBook{});
+    // auto symbols = SymbolDirectory::instance();
+
+    for (auto symbol : symbols) {
+        orderbooks_.emplace(symbol, OrderBook{});
 
         auto orderbook_worker = [this, ticker, &msg_queues] {
             while (running_.load()) {
 
-                Message msg{};
-                while (msg_queues[ticker]->try_pop(msg)) {
-
-                    switch (msg.index()) {
-                        case 3: {
-                            auto& add_order = std::get<3>(msg);
-                            orderbooks_.at(ticker).process_order(Action::Add, add_order.price, add_order.num_shares, add_order.side);
-                            break;
-                        }
-
-                        case 4: {
-                            auto& cancel_order = std::get<4>(msg);
-                            break;
-                        }
-
-                        case 5: {
-                            auto& delete_order = std::get<5>(msg);
-                            break;
-                        }
-
-                        case 6: {
-                            auto& delete_order = std::get<6>(msg);
-                            break;
-                        }
-
-                        default:
-                            break;
-                    }
-                }
             }
         };
 

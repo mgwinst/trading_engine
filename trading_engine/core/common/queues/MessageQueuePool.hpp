@@ -55,5 +55,5 @@ private:
     MessageQueuePool() {}
 
     mutable std::mutex mtx_{ };
-    std::unordered_map<std::string, QueueHandle> queues_;
+    std::unordered_map<uint8_t, QueueHandle> queues_;
 };

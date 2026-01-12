@@ -102,7 +102,7 @@ namespace network
 
                 char msg_type = static_cast<char>(itch_msg->data[0]);
 
-                dispatch_msg(msg_type, itch_msg, MessageQueuePool<Message>::instance());
+                // dispatch_msg(msg_type, itch_msg, MessageQueuePool<Message>::instance());
 
                 itch_msg = reinterpret_cast<itchmsg *>(reinterpret_cast<uint8_t *>(itch_msg) + sizeof(itchmsg) + msg_len);
 

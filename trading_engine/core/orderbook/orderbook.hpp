@@ -3,7 +3,7 @@
 #include <vector>
 #include <utility>
 
-#include "../orderbook_types.hpp"
+#include "orderbook_types.hpp"
 
 #define MAX_LEVELS 1024
 

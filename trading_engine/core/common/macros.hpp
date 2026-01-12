@@ -23,3 +23,5 @@
         std::println(std::cerr, "{} | {} | error: {} [{}]", loc_str, msg, std::strerror(errno), errno); \
         std::exit(EXIT_FAILURE); \
     }
+
+#define FORCE_INLINE inline __attribute__((always_inline))

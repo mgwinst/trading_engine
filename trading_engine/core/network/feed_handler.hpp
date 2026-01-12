@@ -41,7 +41,6 @@ namespace network
     private:
         std::atomic<bool> running_{ false };
         std::shared_ptr<RawSocket> rx_socket_;
-        SPSCQueue<Message> msg_queue_;
         std::jthread rx_thread_;
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];

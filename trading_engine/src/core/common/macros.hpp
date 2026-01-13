@@ -3,7 +3,6 @@
 #include <source_location>
 #include <string_view>
 #include <iostream>
-#include <cstring>
 #include <print>
 
 #define ASSERT(cond, msg) \
@@ -24,4 +23,6 @@
         std::exit(EXIT_FAILURE); \
     }
 
+#define NO_INLINE __attribute__((noinline))
 #define FORCE_INLINE inline __attribute__((always_inline))
+#define FLATTEN __attribute__((flatten))

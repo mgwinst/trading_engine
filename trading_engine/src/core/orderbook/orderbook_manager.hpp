@@ -24,6 +24,6 @@ public:
 private:
     std::atomic<bool> running_{ false };
     std::vector<std::jthread> orderbook_threads_;
-    std::unordered_map<Symbol, OrderBook> orderbooks_;
+    // std::unordered_map<Symbol, OrderBook> orderbooks_;
     std::vector<CoreID> claimed_cores_;
 };

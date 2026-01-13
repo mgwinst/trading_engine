@@ -10,10 +10,8 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 
-#include "dispatch.hpp"
-#include "protocol/message.hpp"
+#include "message.hpp"
 #include "../common/macros.hpp"
-#include "../common/queues/SPSCQueue.hpp"
 
 namespace network
 {
@@ -79,6 +77,28 @@ namespace network
         block_desc->hdr.bh1.block_status = TP_STATUS_KERNEL;
     }
 
+    // Force inlining the decode functions could put pressure on I-cache, measure this later. Maybe only inline the hot decodes? (add/cancel/delete)
+    // maybe don't flatten process_msg() because of this... don't want the unlikely cases pressuring I-cache for no reason, jump to those when we hit those (rare)
+
+    FORCE_INLINE void process_msg(itchmsg* __restrict__ itch_msg, Message& msg) noexcept
+    {
+        const std::byte* __restrict__ p = reinterpret_cast<const std::byte*>(itch_msg->data);
+
+        switch (static_cast<char>(p[0])) {
+            case 'A': [[likely]] Decoder<Add>::decode(p, msg);            return;
+            case 'X': [[likely]] Decoder<Cancel>::decode(p, msg);         return;
+            case 'D': [[likely]] Decoder<Delete>::decode(p, msg);         return;
+            case 'U': [[unlikely]] Decoder<Replace>::decode(p, msg);      return;
+            case 'E': [[unlikely]] Decoder<Execute>::decode(p, msg);      return;
+            case 'R': [[unlikely]] SymbolDirectory::instance().update(p); return;
+            // case 'S': [[unlikely]] Decoder<SystemEvent>::decode(p);    return;
+            default: /* parse_error() */                                  return;
+        }
+    }
+
+    // hot staging a local tmp Message object is useful when we don't yet know if we need it...
+    // otherwise, just decode directly into the next open slot in the queue
+
     inline void process_block(tpacket_block_desc* block_desc)
     {
         uint32_t num_pkts = block_desc->hdr.bh1.num_pkts;
@@ -100,9 +120,7 @@ namespace network
                     // end of session
                 }
 
-                char msg_type = static_cast<char>(itch_msg->data[0]);
-
-                // dispatch_msg(msg_type, itch_msg, MessageQueuePool<Message>::instance());
+                // process_msg(itch_msg, ...)
 
                 itch_msg = reinterpret_cast<itchmsg *>(reinterpret_cast<uint8_t *>(itch_msg) + sizeof(itchmsg) + msg_len);
 

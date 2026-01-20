@@ -8,7 +8,7 @@
 #include <thread>
 
 #include "socket.hpp"
-#include "../common/CoreSet.hpp"
+#include "../common/cores.hpp"
 
 namespace network
 {

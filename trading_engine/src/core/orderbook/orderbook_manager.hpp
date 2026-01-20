@@ -8,7 +8,7 @@
 
 #include "orderbook.hpp"
 #include "../network/protocol/message.hpp"
-#include "../common/CoreSet.hpp"
+#include "../common/cores.hpp"
 
 class OrderbookManager
 {

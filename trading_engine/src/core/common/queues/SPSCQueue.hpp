@@ -18,16 +18,12 @@
 constexpr inline std::size_t DEFAULT_SPSC_QUEUE_SIZE{ 4 * 1024 * 1024 };
 
 template <typename T>
-concept is_lock_free_atomic = requires { std::atomic<T>::is_always_lock_free; };
-
-template <typename T>
 struct alignas(cache_line_size) Slot
 {
     T value;
 };
 
 template <typename T, typename Alloc = std::allocator<Slot<T>>>
-requires is_lock_free_atomic<std::size_t>
 class SPSCQueue : private Alloc 
 {
 public:
@@ -91,7 +87,7 @@ public:
         return value;
     }   
 
-    bool try_pop(T& output)
+    bool try_pop_into(T& output)
     {
         auto read_pointer = read_pointer_.load(std::memory_order_relaxed);
         if (empty(cached_write_pointer_, read_pointer)) {
@@ -118,6 +114,7 @@ private:
     std::size_t capacity_;
 
     static_assert(sizeof(Slot<T>) >= cache_line_size, "Slot<T> must occupy at least one cache line");
+    static_assert(std::atomic<std::size_t>::is_always_lock_free, "std::atomic<std::size_t> must be lock free");
 
     alignas(cache_line_size) std::atomic<std::size_t> write_pointer_{ 0 };
     alignas(cache_line_size) std::size_t cached_write_pointer_{ 0 };

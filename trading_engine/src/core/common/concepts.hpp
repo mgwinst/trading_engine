@@ -14,4 +14,3 @@ concept ByteType = is_byte<T> || std::is_same_v<T, std::byte>;
 
 template <std::size_t S>
 concept is_power_of_two = std::has_single_bit(S);
-

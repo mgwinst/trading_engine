@@ -3,7 +3,7 @@
 #include "../network/protocol/message.hpp"
 #include "../common/queues/MessageQueuePool.hpp"
 #include "../common/thread_utils.hpp"
-#include "../common/CoreSet.hpp"
+#include "../common/cores.hpp"
 
 OrderbookManager::OrderbookManager() : running_{ true }
 {

@@ -6,7 +6,7 @@
 #include <ranges>
 #include <algorithm>
 
-#define TOTAL_CORES 16
+inline constexpr std::size_t TOTAL_CORES{ 16 };
 
 using CoreID = int;
 

@@ -2,6 +2,7 @@
 
 #include <source_location>
 #include <string_view>
+#include <cstring>
 #include <iostream>
 #include <print>
 
@@ -23,6 +24,9 @@
         std::exit(EXIT_FAILURE); \
     }
 
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define PACKED __attribute((packed))
 #define NO_INLINE __attribute__((noinline))
 #define FORCE_INLINE inline __attribute__((always_inline))
 #define FLATTEN __attribute__((flatten))

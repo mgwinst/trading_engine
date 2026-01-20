@@ -74,7 +74,7 @@ private:
 
         std::vector<uint64_t> symbols;
         for (const auto& s : symbol_strs)
-            symbols.push_back(load_le<uint64_t>(str_to_bytes(s).data()));
+            symbols.push_back(loadu<uint64_t>(str_to_bytes(s).data()));
 
         return symbols;
     }

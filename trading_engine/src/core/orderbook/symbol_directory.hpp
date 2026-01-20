@@ -15,19 +15,16 @@ struct SymbolDirectory
         return symbol_dir;
     }
 
-    int8_t index(const uint16_t loc) const noexcept
+    auto index(const uint16_t loc) const noexcept
     {
         return locate_to_index[loc];
     }
 
-    void update(const std::byte* p) noexcept
+    void update(const Message& msg) noexcept
     {
-        uint16_t loc = load_be<uint16_t>(p + Offset<StockDirectory>::LOCATE);
-        uint64_t symbol = load_le<uint64_t>(p + Offset<StockDirectory>::SYMBOL_STR);
-
         for (auto i = 0uz; i < NUM_WATCHED_SYMBOLS; i++) {
-            if (symbol == watched_symbols[i]) {
-                locate_to_index[loc] = i;
+            if (msg.symbol == watched_symbols[i]) {
+                locate_to_index[msg.locate] = i;
                 return;
             }
         }

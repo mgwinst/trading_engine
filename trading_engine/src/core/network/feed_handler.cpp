@@ -1,7 +1,7 @@
 #include "feed_handler.hpp"
 #include "socket.hpp"
 #include "../common/thread_utils.hpp"
-#include "../common/CoreSet.hpp"
+#include "../common/cores.hpp"
 
 namespace network
 {

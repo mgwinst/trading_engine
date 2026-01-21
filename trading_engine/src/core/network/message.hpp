@@ -18,8 +18,6 @@ struct moldmsg
     uint8_t data[];
 } PACKED;
 
-// https://nasdaqtrader.com/content/technicalSupport/specifications/dataproducts/binaryfile.pdf
-
 // uint64_t symbol for stock directory messages ()
 struct alignas(64) Message 
 {

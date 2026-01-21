@@ -12,30 +12,39 @@
 #include <sys/socket.h>
 
 #include "message.hpp"
+#include "../common/intrinsics.hpp"
 #include "../common/macros.hpp"
 #include "../common/bytes.hpp"
 #include "../orderbook/symbol_directory.hpp"
 
 namespace network
 {
-    inline constexpr uint32_t BLOCK_SIZE{ 2 * 1024 * 1024 };
-    inline constexpr uint32_t BLOCK_COUNT{ 8 };
-    inline constexpr uint32_t FRAME_SIZE{ 2048 };
-
-    // let's modernize this, std::span<std::span<byte>> instead of classic descriptor pattern
-
-    struct RingDesc
+    struct ipv4_min
     {
-        uint8_t* block_ptr{ nullptr };
-        std::size_t len{ 0 };
-    };
+        std::uint8_t ver_ihl;
+        std::uint8_t tos;
+        std::uint16_t tot_len;
+        std::uint16_t id;
+        std::uint16_t frag_off;
+        std::uint8_t ttl;
+        std::uint8_t proto;
+        std::uint16_t csum;
+        std::uint32_t src_addr;
+        std::uint32_t dst_addr;
+    } PACKED;
+
+    static_assert(sizeof(ipv4_min) == 20);
 
     struct Ring
     {
-        RingDesc* rd{ nullptr };
-        uint8_t* map{ nullptr };
+        std::vector<std::span<std::byte>> blocks;
+        std::byte* buffer{ nullptr };
         tpacket_req3 req{ };
     };
+
+    inline constexpr uint32_t BLOCK_SIZE{ 2 * 1024 * 1024 };
+    inline constexpr uint32_t BLOCK_COUNT{ 8 };
+    inline constexpr uint32_t FRAME_SIZE{ 2048 };
 
     inline void configure_ring(int32_t fd, Ring& ring)
     {
@@ -54,67 +63,37 @@ namespace network
         if (setsockopt(fd, SOL_PACKET, PACKET_RX_RING, &ring.req, sizeof(ring.req)))
             error_exit("setsockopt(), PACKET_RX_RING");
 
-        ring.map = reinterpret_cast<uint8_t *>(mmap(nullptr, ring.req.tp_block_size * ring.req.tp_block_nr,
-                    PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED, fd, 0));
+        void* map = mmap(nullptr, ring.req.tp_block_size * ring.req.tp_block_nr,
+                    PROT_READ | PROT_WRITE, MAP_SHARED | MAP_LOCKED, fd, 0);
 
-        if (ring.map == MAP_FAILED)
+        if (map == MAP_FAILED)
             error_exit("mmap()");
 
-        ring.rd = new RingDesc[ring.req.tp_block_nr];
-        if (!ring.rd)
-            error_exit("malloc()");
-
+        ring.buffer = reinterpret_cast<std::byte *>(map);
+        
         for (uint32_t i = 0; i < ring.req.tp_block_nr; i++) {
-            ring.rd[i].block_ptr = ring.map + (i * ring.req.tp_block_size);
-            ring.rd[i].len = ring.req.tp_block_size;
+            auto block = std::span<std::byte>{ring.buffer + (i * ring.req.tp_block_size), ring.req.tp_block_size};
+            ring.blocks.push_back(block);
         }
     }
 
-    inline bool is_block_readable(tpacket_block_desc* block_desc)
+    inline bool is_block_readable(std::span<std::byte> block) noexcept
     {
+        auto* bdesc = reinterpret_cast<tpacket_block_desc *>(block.data());
+
         std::atomic_thread_fence(std::memory_order_acquire); 
-        return block_desc->hdr.bh1.block_status & TP_STATUS_USER;
+        return bdesc->hdr.bh1.block_status & TP_STATUS_USER;
     }
 
-    inline void flush_block(tpacket_block_desc* block_desc)
+    inline void flush_block(std::span<std::byte> block) noexcept
     {
+        auto* bdesc = reinterpret_cast<tpacket_block_desc *>(block.data());
+
         std::atomic_thread_fence(std::memory_order_release);
-        block_desc->hdr.bh1.block_status = TP_STATUS_KERNEL;
+        bdesc->hdr.bh1.block_status = TP_STATUS_KERNEL;
     }
 
-    // move this function
-    FORCE_INLINE void push_to_queue(const Message& msg) noexcept
-    {
-        auto idx = SymbolDirectory::instance().index(msg.locate);
-
-        if (idx < 0)
-            return;
-
-        // queue[idx].try_push(msg)
-    }
-
-    inline void prefetch(const void* p) noexcept
-    {
-        __builtin_prefetch(p, 0, 3);
-    }
-
-    struct ipv4_min
-    {
-        std::uint8_t ver_ihl;
-        std::uint8_t tos;
-        std::uint16_t tot_len;
-        std::uint16_t id;
-        std::uint16_t frag_off;
-        std::uint8_t ttl;
-        std::uint8_t proto;
-        std::uint16_t csum;
-        std::uint32_t src_addr;
-        std::uint32_t dst_addr;
-    } PACKED;
-
-    static_assert(sizeof(ipv4_min) == 20);
-
-    inline void parse_mold(std::span<const std::byte> mold) noexcept
+    inline void process_mold(std::span<const std::byte> mold) noexcept
     {
         const std::byte* base = mold.data();       
         const std::byte* end = mold.data() + mold.size();
@@ -156,7 +135,12 @@ namespace network
             }
 
             Message decoded_msg = deserialize(msg);   
-            // push_to_queue(decoded_msg);
+
+            auto idx = SymbolDirectory::instance().index(decoded_msg.locate);
+            if (idx < 0)
+                return;
+
+            // queue[idx].try_push(msg) 
         }
     }
     
@@ -196,10 +180,8 @@ namespace network
         
         offset += sizeof(udphdr);
 
-        parse_mold(frame.subspan(offset));
+        process_mold(frame.subspan(offset));
     }
-
-    // template process_() on callable to call on payload? forward this through the process_ call chain?
 
     inline void process_block(std::span<std::byte> block) noexcept
     {
@@ -215,7 +197,7 @@ namespace network
         uint32_t offset = bhdr->offset_to_first_pkt;
 
         if (offset >= block.size()) [[unlikely]] {
-            flush_block(bdesc);
+            flush_block(block);
             return;
         }
 

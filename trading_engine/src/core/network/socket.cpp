@@ -3,6 +3,7 @@
 #include <linux/udp.h>
 
 #include "socket.hpp"
+#include "packet.hpp"
 #include "socket_utils.hpp"
 #include "../common/macros.hpp"
 
@@ -31,36 +32,28 @@ namespace network
 
     RawSocket::~RawSocket()
     {
-        munmap(ring_.map, ring_.req.tp_block_size * ring_.req.tp_block_nr);
-
-        delete[] ring_.rd;
+        munmap(ring_.buffer, ring_.req.tp_block_size * ring_.req.tp_block_nr);
 
         if (fd_)
             close(fd_);
     }
 
-
     void RawSocket::read()
     {
-        static std::size_t block_idx{ 0 };
+        static auto block_idx = 0uz;
 
-        for (std::size_t block_iter = 0; block_iter < ring_.req.tp_block_nr; block_iter++) {
-            tpacket_block_desc* block_desc = reinterpret_cast<tpacket_block_desc *>(ring_.rd[block_idx].block_ptr);
-            
-            if (!is_block_readable(block_desc)) {
-                // std::println("block not readable...");
-                block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);
+        for (auto block_iter = 0uz; block_iter < ring_.blocks.size(); block_iter++) {
+            if (!is_block_readable(ring_.blocks[block_idx])) {
+                block_idx = (block_idx + 1) & (ring_.blocks.size() - 1);
                 continue;
             }
- 
-            // std::println("process_block()");
-            process_block(block_desc);
-            flush_block(block_desc);
-            block_idx = (block_idx + 1) & (ring_.req.tp_block_nr - 1);
+
+            process_block(ring_.blocks[block_idx]);
+            flush_block(ring_.blocks[block_idx]);
+            block_idx = (block_idx + 1) & (ring_.blocks.size() - 1);
 
             block_iter = 0;
         }
     }
-
 
 } // namespace network

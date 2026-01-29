@@ -23,6 +23,7 @@ struct alignas(64) Message
 {
     uint64_t symbol; 
     uint64_t order_id;
+    uint64_t new_order_id;
     uint64_t timestamp;
     uint32_t price;
     uint32_t qty;
@@ -36,6 +37,7 @@ struct Cancel {};
 struct Delete {};
 struct Replace {};
 struct Execute {};
+struct ExecutePrice {};
 struct StockDirectory{};
 struct SystemEvent{};
 
@@ -99,6 +101,19 @@ struct Offset<Execute>
 };
 
 template <>
+struct Offset<ExecutePrice>
+{
+    static constexpr std::size_t TYPE       = 0; // 'C'
+    static constexpr std::size_t LOCATE     = 1;
+    static constexpr std::size_t TIMESTAMP  = 5;
+    static constexpr std::size_t ORDER_ID   = 11;
+    static constexpr std::size_t QTY        = 19;
+    static constexpr std::size_t MATCH_NUM  = 23;
+    static constexpr std::size_t PRINTABLE  = 31;
+    static constexpr std::size_t EXEC_PRICE = 32;
+};
+
+template <>
 struct Offset<StockDirectory>
 {
     static constexpr std::size_t TYPE       = 0; // 'R'
@@ -120,14 +135,14 @@ struct Decoder<Add>
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
 
-        msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
-        msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
-        msg.order_id  = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
-        msg.price     = loadu_bswap<uint32_t>(p + Offset<T>::PRICE);
-        msg.qty       = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
-        msg.side      = static_cast<uint8_t>(*(p + Offset<T>::SIDE));
+        msg.msg_type = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate   = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
+        msg.price    = loadu_bswap<uint32_t>(p + Offset<T>::PRICE);
+        msg.qty      = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
+        msg.side     = static_cast<uint8_t>(*(p + Offset<T>::SIDE));
 
         return msg;
     }
@@ -140,12 +155,12 @@ struct Decoder<Cancel>
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
         
-        msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
-        msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
-        msg.order_id  = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
-        msg.qty       = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
+        msg.msg_type = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate   = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
+        msg.qty      = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
 
         return msg;
     }
@@ -158,11 +173,11 @@ struct Decoder<Delete>
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
 
-        msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
-        msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
-        msg.order_id  = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
+        msg.msg_type = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate   = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
 
         return msg;
     }
@@ -175,13 +190,14 @@ struct Decoder<Replace>
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
 
-        msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
-        msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
-        msg.order_id  = loadu_bswap<uint64_t>(p + Offset<T>::OLD_ORDER_ID); // need new ID too
-        msg.price     = loadu_bswap<uint32_t>(p + Offset<T>::PRICE);
-        msg.qty       = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
+        msg.msg_type     = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate       = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id     = loadu_bswap<uint64_t>(p + Offset<T>::OLD_ORDER_ID);
+        msg.new_order_id = loadu_bswap<uint64_t>(p + Offset<T>::NEW_ORDER_ID);
+        msg.price        = loadu_bswap<uint32_t>(p + Offset<T>::PRICE);
+        msg.qty          = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
 
         return msg;
     }
@@ -194,16 +210,38 @@ struct Decoder<Execute>
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
 
-        msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
-        msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
-        msg.order_id  = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
-        msg.qty       = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
+        msg.msg_type = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate   = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
+        msg.qty      = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
 
         return msg;
     }
 };
+
+template <>
+struct Decoder<ExecutePrice>
+{
+    using T = ExecutePrice;
+
+    static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
+    {
+        Message msg{};
+
+        msg.msg_type = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
+        msg.locate   = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
+        msg.order_id = loadu_bswap<uint64_t>(p + Offset<T>::ORDER_ID);
+        msg.qty      = loadu_bswap<uint32_t>(p + Offset<T>::QTY);
+        msg.price    = loadu_bswap<uint32_t>(p + Offset<T>::EXEC_PRICE);
+
+        return msg;
+    }
+};
+
+static_assert(Offset<Execute>::ORDER_ID == Offset<ExecutePrice>::ORDER_ID);
+static_assert(Offset<Execute>::QTY == Offset<ExecutePrice>::QTY);
 
 template <>
 struct Decoder<StockDirectory> {
@@ -212,7 +250,7 @@ struct Decoder<StockDirectory> {
 
     static FORCE_INLINE Message decode(const std::byte* __restrict__ p) noexcept
     {
-        Message msg;
+        Message msg{};
 
         msg.msg_type  = static_cast<uint8_t>(*(p + Offset<T>::TYPE));
         msg.locate    = loadu_bswap<uint16_t>(p + Offset<T>::LOCATE);
@@ -233,12 +271,16 @@ FORCE_INLINE Message deserialize(const moldmsg* __restrict__ mold_msg) noexcept
 {
     const std::byte* __restrict__ p = reinterpret_cast<const std::byte*>(mold_msg->data);
 
+    // measure with branch attributes for each case later
+    
     switch (static_cast<char>(p[0])) {
-        case 'A': [[likely]]   return Decoder<Add>::decode(p);
-        case 'X': [[likely]]   return Decoder<Cancel>::decode(p);   
-        case 'D': [[likely]]   return Decoder<Delete>::decode(p);   
-        case 'U': [[unlikely]] return Decoder<Replace>::decode(p);
-        case 'E': [[unlikely]] return Decoder<Execute>::decode(p);
+        case 'A': return Decoder<Add>::decode(p);
+        case 'X': return Decoder<Cancel>::decode(p);   
+        case 'D': return Decoder<Delete>::decode(p);   
+        case 'U': return Decoder<Replace>::decode(p);
+        case 'E': 
+        case 'C': return Decoder<Execute>::decode(p);
+
         // case 'S': [[unlikely]] Decoder<SystemEvent>::decode(p);
         default: /* parse_error() */ 
     }

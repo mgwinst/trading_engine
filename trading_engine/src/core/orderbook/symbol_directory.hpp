@@ -8,11 +8,17 @@
 #include "../config/config.hpp"
 #include "../network/message.hpp"
 
-struct SymbolDirectory
+class SymbolDirectory
 {
+public:
     static SymbolDirectory& instance() noexcept {
         static SymbolDirectory symbol_dir{};
         return symbol_dir;
+    }
+
+    uint64_t operator[](int8_t index) const noexcept
+    {
+        return watched_symbols[index];
     }
 
     auto index(const uint16_t loc) const noexcept
@@ -30,6 +36,12 @@ struct SymbolDirectory
         }
     }
 
+    const auto& get_watched_symbols() const noexcept
+    {
+        return watched_symbols;
+    }
+
+private:
     static constexpr std::size_t NUM_WATCHED_SYMBOLS{ 3 };
 
     SymbolDirectory()

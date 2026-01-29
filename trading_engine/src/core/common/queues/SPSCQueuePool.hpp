@@ -1,16 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
 #include <unordered_map>
 #include <mutex>
 
 #include "SPSCQueue.hpp"
 
-#define SIZE (4 * 1024 * 1024) // 4MB
-
-// SymbolDirectory::instance()::index() -> index valid? -> uint8_t index used for map of queues
+inline constexpr std::size_t SIZE{ 4 * 1024 * 1024 };
 
 template <typename T>
 class SPSCQueuePool
@@ -24,8 +20,7 @@ public:
     SPSCQueuePool(SPSCQueuePool&&) = delete;
     SPSCQueuePool& operator=(SPSCQueuePool&&) = delete;
 
-    // template the key type?
-    QueueHandle& operator[](const uint8_t index) noexcept
+    QueueHandle& operator[](const uint64_t index) noexcept
     {
         return queues_[index];
     }
@@ -36,11 +31,12 @@ public:
         return message_queues;
     }
 
-    void add_queues(const uint8_t index) noexcept
+    void add_queue(const uint64_t index) noexcept
     {
         std::scoped_lock lock{ mtx_ };
 
         auto q = std::make_shared<Queue>(SIZE);
+
         queues_.insert({index, q});
     }
 
@@ -48,5 +44,5 @@ private:
     SPSCQueuePool() {}
 
     mutable std::mutex mtx_{ };
-    std::unordered_map<uint8_t, QueueHandle> queues_;
+    std::unordered_map<uint64_t, QueueHandle> queues_; // use faster hash table?
 };

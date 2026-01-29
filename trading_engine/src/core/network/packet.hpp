@@ -15,6 +15,7 @@
 #include "../common/intrinsics.hpp"
 #include "../common/macros.hpp"
 #include "../common/bytes.hpp"
+#include "../common/queues/SPSCQueuePool.hpp"
 #include "../orderbook/symbol_directory.hpp"
 
 namespace network
@@ -37,8 +38,8 @@ namespace network
 
     struct Ring
     {
-        std::vector<std::span<std::byte>> blocks;
-        std::byte* buffer{ nullptr };
+        std::vector<std::span<const std::byte>> blocks;
+        const std::byte* buffer{ nullptr };
         tpacket_req3 req{ };
     };
 
@@ -72,7 +73,7 @@ namespace network
         ring.buffer = reinterpret_cast<std::byte *>(map);
         
         for (uint32_t i = 0; i < ring.req.tp_block_nr; i++) {
-            auto block = std::span<std::byte>{ring.buffer + (i * ring.req.tp_block_size), ring.req.tp_block_size};
+            auto block = std::span<const std::byte>{ring.buffer + (i * ring.req.tp_block_size), ring.req.tp_block_size};
             ring.blocks.push_back(block);
         }
     }
@@ -91,6 +92,29 @@ namespace network
 
         std::atomic_thread_fence(std::memory_order_release);
         bdesc->hdr.bh1.block_status = TP_STATUS_KERNEL;
+    }
+
+    inline void process_message(const moldmsg* msg) noexcept
+    {
+        // compiler implications on this load?
+        auto& symbol_dir = SymbolDirectory::instance();
+
+        Message decoded_msg = deserialize(msg);
+
+        if (static_cast<char>(decoded_msg.msg_type) == 'R') [[unlikely]] {
+            symbol_dir.update(decoded_msg);
+            return;
+        }
+
+        auto idx = symbol_dir.index(decoded_msg.locate);
+        if (idx < 0)
+            return;
+
+        uint64_t symbol = symbol_dir[idx];
+
+        auto& queue = SPSCQueuePool<Message>::instance();
+
+        queue[symbol]->try_push(decoded_msg);
     }
 
     inline void process_mold(std::span<const std::byte> mold) noexcept
@@ -134,13 +158,7 @@ namespace network
                 }
             }
 
-            Message decoded_msg = deserialize(msg);   
-
-            auto idx = SymbolDirectory::instance().index(decoded_msg.locate);
-            if (idx < 0)
-                return;
-
-            // queue[idx].try_push(msg) 
+            process_message(msg);
         }
     }
     
@@ -240,4 +258,4 @@ namespace network
         }
     }
 
-} // namespace Network
+} // namespace network

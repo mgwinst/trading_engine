@@ -18,7 +18,7 @@ namespace network
     {
         rx_socket_ = socket;     
 
-        epoll_event ev{ .events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())} };
+        epoll_event ev{.events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())} };
 
         if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket->fd_, &ev))
             error_exit("epoll_ctl()");
@@ -33,9 +33,8 @@ namespace network
                 rx_socket_->read();
                 
                 int32_t event = epoll_wait(epoll_fd_, events_, 1, -1);
-                if (event == -1) {
+                if (event == -1)
                     error_exit("epoll_wait()")
-                }
             }
         };
 

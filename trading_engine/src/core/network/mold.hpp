@@ -8,7 +8,7 @@
 #include "../orderbook/symbol_directory.hpp"
 #include "../common/queues/SPSCQueuePool.hpp"
 #include "../common/bytes.hpp"
-#include "../common/intrinsics.hpp"
+#include "../common/macros.hpp"
 
 inline void on_message(const moldmsg* msg) noexcept
 {
@@ -47,9 +47,9 @@ inline void process_mold(std::span<const std::byte> mold) noexcept
 
     std::size_t offset = sizeof(moldhdr);
 
-    // even worth it to prefetch the first packet?
+    // even worth it to PREFETCH the first packet?
     if (msg_count)
-        prefetch(base + offset);
+        PREFETCH(base + offset);
     
     for (uint16_t i = 0; i < msg_count; i++) {
         const std::byte* mold_msg = base + offset;
@@ -70,7 +70,7 @@ inline void process_mold(std::span<const std::byte> mold) noexcept
             const std::byte* next_mold_msg = base + offset;
             
             if (ptr_in_range(next_mold_msg, base, end)) [[likely]] {
-                prefetch(next_mold_msg);
+                PREFETCH(next_mold_msg);
             }
         }
 

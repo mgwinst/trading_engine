@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <cwchar>
-#include <optional>
 #include <vector>
 
 #include <boost/unordered/unordered_flat_map.hpp>

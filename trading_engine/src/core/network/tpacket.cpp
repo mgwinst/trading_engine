@@ -1,13 +1,15 @@
 #include <linux/if_ether.h>
 #include <atomic>
+#include <linux/udp.h>
 
 #include "tpacket.hpp"
 #include "packet.hpp"
-#include "../common/intrinsics.hpp"
+#include "../common/bytes.hpp"
+#include "../common/macros.hpp"
 
 namespace network
 {
-    void TPacketProcessor::process_bytes()
+    void TPacketProcessor::drain_buffer() noexcept
     {
         static auto block_idx = 0uz;
 
@@ -83,7 +85,7 @@ namespace network
         }
 
         if (num_pkts) 
-            prefetch(base + offset);
+            PREFETCH(base + offset);
     
         for (uint32_t i = 0; i < num_pkts; i++) {
             const std::byte* tpacket = base + offset;
@@ -96,7 +98,7 @@ namespace network
             if (next_pkt == 0 || offset + next_pkt > block.size()) [[unlikely]] break;
 
             const uint32_t snaplen = tph->tp_snaplen;
-            const uint16_t mac_offset  = tph->tp_mac;
+            const uint16_t mac_offset = tph->tp_mac;
             
             const std::byte* eth = tpacket + mac_offset;
             
@@ -107,11 +109,11 @@ namespace network
 
             if (i + 1 < num_pkts) [[likely]] {
                 const std::byte* next_tpacket = base + (offset + next_pkt);
-                prefetch(next_tpacket);
+                PREFETCH(next_tpacket);
 
                 if (ptr_in_range(next_tpacket + sizeof(tpacket3_hdr), base, end)) [[likely]] {
                     auto* next_tph = reinterpret_cast<const tpacket3_hdr *>(next_tpacket);
-                    prefetch(base + next_tph->tp_mac);
+                    PREFETCH(base + next_tph->tp_mac);
                 }
             }
             
@@ -119,7 +121,7 @@ namespace network
 
             offset += next_pkt;
 
-            // LOG(...) -> tpacket time stamp
+            // LOG(...) -> ...
         }
     }
 

@@ -1,9 +1,6 @@
-#include "core/network/socket.hpp"
-#include <cstdint>
-
-using namespace network;
+#include "core/network/channel.hpp"
 
 int main()
 {
-    RawSocket socket{"eno1"};
+    auto channel = network::Channel{ "eno1" };
 }

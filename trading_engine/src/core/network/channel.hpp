@@ -11,10 +11,6 @@
 #include "socket.hpp"
 #include "../common/cores.hpp"
 
-// this channel should call on_event() when epoll_wait() returns. 
-
-
-
 namespace network
 {
     class Channel
@@ -23,14 +19,14 @@ namespace network
         template <typename... Args>
         Channel(Args... args)
         {
-            rx_socket_ = std::make_shared<RawSocket>(args...);
+            socket_ = std::make_shared<RawSocket>(args...);
 
             epoll_fd_ = epoll_create(1);
 
             if (epoll_fd_ == -1)
                 error_exit("epoll_create()");
 
-            add_to_epoll_list(rx_socket_);
+            add_to_epoll_list(socket_);
         }
 
         ~Channel()
@@ -52,7 +48,7 @@ namespace network
 
     private:
         std::atomic<bool> running_{ false };
-        std::shared_ptr<RawSocket> rx_socket_;
+        std::shared_ptr<RawSocket> socket_;
         std::jthread rx_thread_;
         int32_t epoll_fd_{ -1 };
         epoll_event events_[1];
@@ -60,9 +56,9 @@ namespace network
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
 
-        void on_event()
+        void on_event() noexcept
         {
-            rx_socket_->read();
+            socket_->read();
         }
     };
     

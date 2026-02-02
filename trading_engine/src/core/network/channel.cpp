@@ -2,14 +2,15 @@
 #include "socket.hpp"
 #include "../common/thread_utils.hpp"
 #include "../common/cores.hpp"
+#include "tpacket.hpp"
 
 namespace network
 {
     void Channel::add_to_epoll_list(std::shared_ptr<RawSocket>& socket)
     {
-        rx_socket_ = socket;     
+        socket_ = socket;
 
-        epoll_event ev{.events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())} };
+        epoll_event ev{.events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())}};
 
         if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket->get_fd(), &ev))
             error_exit("epoll_ctl()");
@@ -21,11 +22,11 @@ namespace network
         
         auto event_loop = [&] {
             while (running_.load()) {
-                on_event();
-                
                 int32_t event = epoll_wait(epoll_fd_, events_, 1, -1);
                 if (event == -1)
                     error_exit("epoll_wait()")
+
+                on_event();
             }
         };
 

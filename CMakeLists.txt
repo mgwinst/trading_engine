@@ -18,8 +18,8 @@ pkg_check_modules(LIBXDP REQUIRED IMPORTED_TARGET libxdp>=1.0)
 
 add_library(engine_lib STATIC
     trading_engine/src/core/network/xdp/xdp_loader.cpp
-    trading_engine/src/core/network/feed_handler.cpp
-    trading_engine/src/core/network/socket.cpp
+    trading_engine/src/core/network/channel.cpp
+    trading_engine/src/core/network/tpacket.cpp
     trading_engine/src/core/orderbook/orderbook_l3.cpp
 )
 

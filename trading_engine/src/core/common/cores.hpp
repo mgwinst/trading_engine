@@ -8,7 +8,7 @@
 
 inline constexpr std::size_t TOTAL_CORES{ 16 };
 
-using CoreID = int;
+using CoreID = int32_t;
 
 class CoreSet
 {
@@ -26,12 +26,12 @@ public:
     CoreSet(CoreSet&&) = delete;
     CoreSet& operator=(CoreSet&&) = delete;
 
-    int claim_core()
+    int32_t claim_core()
     {
         return find_available_core();
     }
 
-    void release_core(int core_id)
+    void release_core(int32_t core_id)
     {
         release_available_core(core_id);
     }
@@ -53,7 +53,7 @@ private:
         available_cores_.store(all_available, std::memory_order_release);
     }
 
-    int find_available_core()
+    int32_t find_available_core()
     {
         while (true) {
             auto expected = available_cores_.load(std::memory_order_acquire);
@@ -72,12 +72,12 @@ private:
             if (available_cores_.compare_exchange_strong(expected, desired, 
                                                          std::memory_order_release, 
                                                          std::memory_order_acquire)) {
-                return static_cast<int>(idx);
+                return static_cast<int32_t>(idx);
             }
         }
     }
 
-    void release_available_core(int core_id)
+    void release_available_core(int32_t core_id)
     {
         while (true) {
             auto expected = available_cores_.load(std::memory_order_acquire);

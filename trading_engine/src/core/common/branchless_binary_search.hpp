@@ -1,7 +1,7 @@
 #pragma once
 
-namespace common {
-
+namespace common 
+{
     template <typename Forward_Iterator, typename T, typename Compare> 
     Forward_Iterator branchless_lower_bound(Forward_Iterator first, Forward_Iterator last, const T& value, Compare comp) {
         auto length = last - first;

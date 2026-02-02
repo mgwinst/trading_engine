@@ -52,7 +52,7 @@ namespace network
                 error_exit("munmap()");
         }
 
-        std::vector<std::span<std::byte>> blocks_;
+        std::vector<std::span<std::byte>> blocks_{ };
         std::byte* buffer_{ nullptr };
         tpacket_req3 req_{ };
     };
@@ -60,11 +60,9 @@ namespace network
     class TPacketProcessor
     {
     public:
-        explicit TPacketProcessor(int32_t fd) : ring_{ fd }
-        {
+        explicit TPacketProcessor(int32_t fd) : ring_{ fd } {}
 
-        }
-
+        void drain_buffer() noexcept;
 
     private:
         TPacketRing ring_;

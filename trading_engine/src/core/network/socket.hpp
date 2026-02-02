@@ -1,24 +1,44 @@
 #pragma once
 
-#include "socket_utils.hpp"
-#include <concepts>
 #include <linux/if_packet.h>
 #include <string_view>
 #include <cstdint>
 
+#include "tpacket.hpp"
+#include "socket_utils.hpp"
 #include "../common/macros.hpp"
 
 namespace network
 {
-    template <typename T>
-    concept PacketProcessor = std::invocable<T, std::span<std::byte>>;
-
-    template <PacketProcessor Processor>
     class RawSocket
     {
     public:
-        RawSocket(std::string_view interface);
-        ~RawSocket();
+        RawSocket(std::string_view interface)
+        {
+            if (!interface_exists(interface.data()))
+                error_exit("interface doesn't exist");
+
+            int32_t socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
+            if (socket_fd == -1)
+                error_exit("socket()");
+
+            if (set_non_blocking(socket_fd))
+                error_exit("set_non_blocking()");
+
+            if (bind_to_interface(socket_fd, interface.data()))
+                error_exit("bind_to_interface()");
+
+            processor_ = std::make_unique<TPacketProcessor>(socket_fd);
+
+            fd_ = socket_fd;
+        }
+
+        ~RawSocket()
+        {
+            if (fd_)
+                close(fd_);
+        }
 
         RawSocket(const RawSocket&) = delete;
         RawSocket& operator=(const RawSocket&) = delete;
@@ -27,7 +47,7 @@ namespace network
 
         void read() noexcept
         {
-            processor_();
+            processor_->drain_buffer();
         }
 
         auto get_fd() const noexcept 
@@ -37,34 +57,7 @@ namespace network
 
     private:
         int32_t fd_{ -1 };
-        Processor processor_;
+        std::unique_ptr<TPacketProcessor> processor_;
     };
-
-    template <PacketProcessor Processor>
-    RawSocket<Processor>::RawSocket(std::string_view interface)
-    {
-        if (!interface_exists(interface.data()))
-            error_exit("interface doesn't exist");
-
-        int32_t socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-
-        if (socket_fd == -1)
-            error_exit("socket()");
-
-        if (set_non_blocking(socket_fd))
-            error_exit("set_non_blocking()");
-
-        if (bind_to_interface(socket_fd, interface.data()))
-            error_exit("bind_to_interface()");
-
-        fd_ = socket_fd;
-    }
-
-    template <PacketProcessor Processor>
-    RawSocket<Processor>::~RawSocket()
-    {
-        if (fd_)
-            close(fd_);
-    }
 
 } // namespace network

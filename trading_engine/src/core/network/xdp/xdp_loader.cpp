@@ -2,8 +2,8 @@
 #include <net/if.h>
 #include <print>
 
-#include "common/macros.hpp"
-#include "xdp/xdp_loader.hpp"
+#include "../../common/macros.hpp"
+#include "xdp_loader.hpp"
 
 xdp_program_info attach_xdp_filter(const char* interface)
 {

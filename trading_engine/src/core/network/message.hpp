@@ -282,6 +282,7 @@ FORCE_INLINE Message deserialize(const moldmsg* __restrict__ mold_msg) noexcept
         case 'C': return Decoder<Execute>::decode(p);
 
         // case 'S': [[unlikely]] Decoder<SystemEvent>::decode(p);
-        default: /* parse_error() */ 
+
+        default: return Message{}; // debug 
     }
 }

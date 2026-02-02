@@ -9,7 +9,7 @@
 #include "../common/bytes.hpp"
 #include "../common/macros.hpp"
 
-inline std::string CONFIG_FILE_PATH = std::string{ std::getenv("TRADING_ENGINE_HOME")} + "src/core/config/config.json";
+inline std::string CONFIG_FILE_PATH = "~/trading_engine/src/core/config/config.json";
 
 using json = nlohmann::json;
 
@@ -82,6 +82,8 @@ private:
     Config() noexcept
     {
         interface_ = parse_interface_from_json(CONFIG_FILE_PATH);
+
+        
         symbols_ = init_symbols();
     }
     

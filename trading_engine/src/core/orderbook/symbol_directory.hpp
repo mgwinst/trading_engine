@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    static constexpr std::size_t NUM_WATCHED_SYMBOLS{ 3 };
+    static constexpr std::size_t NUM_WATCHED_SYMBOLS{ 3 }; // this should be fetched from config file
 
     SymbolDirectory()
     {

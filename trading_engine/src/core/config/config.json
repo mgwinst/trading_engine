@@ -1,7 +1,7 @@
 {
   "network": {
     "interface": "eno1",
-    "xdp_filter_obj_path": "$TRADING_ENGINE_HOME/core/network/xdp/xdp_filter.o"
+    "xdp_filter_obj_path": "~/trading_engine/src/core/network/xdp/xdp_filter.o"
   },
 
   "engine": {

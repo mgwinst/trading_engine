@@ -6,17 +6,22 @@
 #include <memory>
 #include <atomic>
 #include <thread>
+#include <unistd.h>
 
 #include "socket.hpp"
 #include "../common/cores.hpp"
 
+// this channel should call on_event() when epoll_wait() returns. 
+
+
+
 namespace network
 {
-    class FeedHandler
+    class Channel
     {
     public:
         template <typename... Args>
-        FeedHandler(Args... args)
+        Channel(Args... args)
         {
             rx_socket_ = std::make_shared<RawSocket>(args...);
 
@@ -28,12 +33,19 @@ namespace network
             add_to_epoll_list(rx_socket_);
         }
 
-        ~FeedHandler();
+        ~Channel()
+        {
+            if (running_.load())
+                stop_rx();
 
-        FeedHandler(const FeedHandler&) = delete; 
-        FeedHandler& operator=(const FeedHandler&) = delete; 
-        FeedHandler(FeedHandler&&) = delete; 
-        FeedHandler& operator=(FeedHandler&&) = delete; 
+            if (epoll_fd_)
+                close(epoll_fd_);
+        }
+
+        Channel(const Channel&) = delete; 
+        Channel& operator=(const Channel&) = delete; 
+        Channel(Channel&&) = delete; 
+        Channel& operator=(Channel&&) = delete; 
 
         void start_rx();
         void stop_rx();
@@ -47,6 +59,11 @@ namespace network
         CoreID claimed_core_;
 
         void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
+
+        void on_event()
+        {
+            rx_socket_->read();
+        }
     };
     
 } // namespace network

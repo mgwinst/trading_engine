@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(ENV{TRADING_ENGINE_HOME} "~/trading_engine/trading_engine")
+
 find_package(Boost REQUIRED)
 find_package(PkgConfig REQUIRED)
 
@@ -18,8 +20,7 @@ add_library(engine_lib STATIC
     trading_engine/src/core/network/xdp/xdp_loader.cpp
     trading_engine/src/core/network/feed_handler.cpp
     trading_engine/src/core/network/socket.cpp
-    trading_engine/src/core/orderbook/orderbook_manager.cpp
-    trading_engine/src/core/orderbook/orderbook.cpp
+    trading_engine/src/core/orderbook/orderbook_l3.cpp
 )
 
 target_include_directories(engine_lib PUBLIC

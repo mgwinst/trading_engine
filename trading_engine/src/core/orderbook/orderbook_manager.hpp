@@ -12,6 +12,8 @@
 #include "../common/thread_utils.hpp"
 #include "../common/cores.hpp"
 
+// maybe should be MessageRouter instead?
+
 template <OrderBookType T>
 class OrderBookManager
 {
@@ -45,10 +47,10 @@ OrderBookManager<T>::OrderBookManager() : running_{ true }
 
         orderbooks_.emplace(symbol, OrderBook{});
 
-        auto orderbook_worker = [this, symbol, queue = msg_queues[symbol], book = &orderbooks_[symbol]] {
+        auto orderbook_worker = [this, queue = msg_queues[symbol], book = &orderbooks_[symbol]] {
             while (running_.load()) {
-                const auto msg = queue->try_pop();
-                book->process_exchange_message(msg);
+                auto msg = queue->try_pop();
+                book->process_exchange_message(msg); // this is constrained in OrderBookType -> T concept
             }
         };
 

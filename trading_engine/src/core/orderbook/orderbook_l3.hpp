@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cwchar>
+#include <optional>
 #include <vector>
 
 #include <boost/unordered/unordered_flat_map.hpp>
@@ -69,6 +70,7 @@ private:
     void link_tail(Level& price_level, uint32_t order_idx) noexcept;
     void unlink(uint32_t order_idx) noexcept;
 
+    bool get_order_idx(uint64_t order_id, uint32_t& out_idx) noexcept;
     Level& get_price_level(Order& order) noexcept;
     Level& get_price_level(uint32_t order_idx) noexcept;
 

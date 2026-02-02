@@ -1,19 +1,22 @@
 #pragma once
 
+#include "socket_utils.hpp"
+#include <concepts>
+#include <linux/if_packet.h>
 #include <string_view>
 #include <cstdint>
 
-#include "packet.hpp"
-
-inline constexpr std::size_t QUEUE_SIZE{ 4 * 1024 * 1024 };
+#include "../common/macros.hpp"
 
 namespace network
 {
-    struct RawSocket
-    {
-        int32_t fd_{ -1 };
-        Ring ring_;
+    template <typename T>
+    concept PacketProcessor = std::invocable<T, std::span<std::byte>>;
 
+    template <PacketProcessor Processor>
+    class RawSocket
+    {
+    public:
         RawSocket(std::string_view interface);
         ~RawSocket();
 
@@ -22,7 +25,46 @@ namespace network
         RawSocket(RawSocket&&) = delete;
         RawSocket& operator=(RawSocket&&) = delete;
 
-        void read();
+        void read() noexcept
+        {
+            processor_();
+        }
+
+        auto get_fd() const noexcept 
+        { 
+            return fd_; 
+        }
+
+    private:
+        int32_t fd_{ -1 };
+        Processor processor_;
     };
+
+    template <PacketProcessor Processor>
+    RawSocket<Processor>::RawSocket(std::string_view interface)
+    {
+        if (!interface_exists(interface.data()))
+            error_exit("interface doesn't exist");
+
+        int32_t socket_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
+        if (socket_fd == -1)
+            error_exit("socket()");
+
+        if (set_non_blocking(socket_fd))
+            error_exit("set_non_blocking()");
+
+        if (bind_to_interface(socket_fd, interface.data()))
+            error_exit("bind_to_interface()");
+
+        fd_ = socket_fd;
+    }
+
+    template <PacketProcessor Processor>
+    RawSocket<Processor>::~RawSocket()
+    {
+        if (fd_)
+            close(fd_);
+    }
 
 } // namespace network

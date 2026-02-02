@@ -37,7 +37,7 @@ namespace common {
  
         using namespace std::chrono_literals;
         while (!running && !failed) {
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(10ms);
         }
 
         if (failed) {

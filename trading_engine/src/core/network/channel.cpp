@@ -1,36 +1,27 @@
-#include "feed_handler.hpp"
+#include "channel.hpp"
 #include "socket.hpp"
 #include "../common/thread_utils.hpp"
 #include "../common/cores.hpp"
 
 namespace network
 {
-    FeedHandler::~FeedHandler()
-    {
-        if (running_.load())
-            stop_rx();
-
-        if (epoll_fd_)
-            close(epoll_fd_);
-    }
-
-    void FeedHandler::add_to_epoll_list(std::shared_ptr<RawSocket>& socket)
+    void Channel::add_to_epoll_list(std::shared_ptr<RawSocket>& socket)
     {
         rx_socket_ = socket;     
 
         epoll_event ev{.events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())} };
 
-        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket->fd_, &ev))
+        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket->get_fd(), &ev))
             error_exit("epoll_ctl()");
     }
 
-    void FeedHandler::start_rx()
+    void Channel::start_rx()
     {
         running_.store(true);
         
-        auto rx_loop = [&] {
+        auto event_loop = [&] {
             while (running_.load()) {
-                rx_socket_->read();
+                on_event();
                 
                 int32_t event = epoll_wait(epoll_fd_, events_, 1, -1);
                 if (event == -1)
@@ -42,7 +33,7 @@ namespace network
             auto core_id = CoreSet::instance().claim_core();
             claimed_core_ = core_id;
 
-            auto rxt = common::create_and_pin_thread(core_id, rx_loop);
+            auto rxt = common::create_and_pin_thread(core_id, event_loop);
 
             if (!rxt.has_value()) {
                 CoreSet::instance().release_core(claimed_core_);
@@ -54,7 +45,7 @@ namespace network
         }
     }
 
-    void FeedHandler::stop_rx()
+    void Channel::stop_rx()
     {
         running_.store(false);
 

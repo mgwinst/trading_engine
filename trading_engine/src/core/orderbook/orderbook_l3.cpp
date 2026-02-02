@@ -1,4 +1,4 @@
-#include "OrderBookL3.hpp"
+#include "orderbook_l3.hpp"
 
 // enforce with templates that I am not using uninitialized msg fields for msg type (this is currently danger.)
 void OrderBookL3::process_exchange_message(const Message& msg) noexcept
@@ -34,7 +34,7 @@ uint32_t OrderBookL3::register_order(uint64_t order_id, uint32_t price, uint32_t
 
 void OrderBookL3::deregister_order(uint32_t index) noexcept
 {
-    if (index >= order_pool.size()) return;
+    if (index >= order_pool.size()) return; // don't need this check...
 
     order_index_by_id.erase(order_pool[index].order_id);
 
@@ -57,7 +57,9 @@ void OrderBookL3::add_order(uint64_t order_id, uint32_t price, uint32_t qty, uin
 
 void OrderBookL3::delete_order(uint64_t order_id) noexcept
 {
-    auto order_idx = order_index_by_id[order_id];
+    uint32_t order_idx;
+    if (!get_order_idx(order_id, order_idx))
+        return;
 
     dequeue_order(order_idx);
 
@@ -66,7 +68,10 @@ void OrderBookL3::delete_order(uint64_t order_id) noexcept
 
 void OrderBookL3::cancel_order(uint64_t order_id, uint32_t qty) noexcept
 {
-    auto order_idx = order_index_by_id[order_id];
+    uint32_t order_idx;
+    if (!get_order_idx(order_id, order_idx))
+        return;
+
     auto& order = order_pool[order_idx];
 
     auto removed = std::min(order.qty_remaining, qty);
@@ -83,8 +88,13 @@ void OrderBookL3::cancel_order(uint64_t order_id, uint32_t qty) noexcept
 // replace -> delete + add
 void OrderBookL3::replace_order(uint64_t old_order_id, uint64_t new_order_id, uint32_t price, uint32_t qty) noexcept
 {
-    auto order_idx = order_index_by_id[old_order_id];
+    uint32_t order_idx;
+    if (!get_order_idx(old_order_id, order_idx))
+        return;
+
     auto& order = order_pool[order_idx];
+
+    dequeue_order(order_idx);
 
     order_index_by_id.erase(order.order_id);
     order_index_by_id.emplace(new_order_id, order_idx);
@@ -93,25 +103,26 @@ void OrderBookL3::replace_order(uint64_t old_order_id, uint64_t new_order_id, ui
     order.price = price;
     order.qty_original = qty;
     order.qty_remaining = qty;
-
-    dequeue_order(order_idx);
-    
-    auto& level = get_price_level(order);
     
     queue_order(get_price_level(order), order_idx);   
 }
 
 void OrderBookL3::execute_order(uint64_t order_id, uint32_t qty) noexcept
 {
-    auto order_idx = order_index_by_id[order_id];
+    uint32_t order_idx;
+    if (!get_order_idx(order_id, order_idx))
+        return;
+
     auto& order = order_pool[order_idx];
 
-    if (order.qty_remaining <= qty) {
-        dequeue_order(order_idx);
+    auto executed = std::min(order.qty_remaining, qty);
+
+    get_price_level(order).total_qty -= executed;
+    order.qty_remaining -= executed;
+
+    if (order.qty_remaining == 0) {
+        unlink(order_idx);
         deregister_order(order_idx);
-    } else {
-        get_price_level(order).total_qty -= qty;
-        order.qty_remaining -= qty;
     }
 }
 
@@ -159,15 +170,23 @@ void OrderBookL3::unlink(uint32_t order_idx) noexcept
     next_order.prev = order_to_remove.prev;
 }
 
+bool OrderBookL3::get_order_idx(uint64_t order_id, uint32_t& out) noexcept
+{
+    auto it = order_index_by_id.find(order_id);
+    if (it == order_index_by_id.end()) [[unlikely]]
+        return false;
+
+    out = it->second;
+    return true;
+}
+
 Level& OrderBookL3::get_price_level(Order& order) noexcept
 {
-    auto& levels = order.side == 'B' ? bids : asks;
-    return levels[order.price];
+    return order.side == 'B' ? bids[order.price] : asks[order.price];
 }
 
 Level& OrderBookL3::get_price_level(uint32_t order_idx) noexcept
 {
     auto& order = order_pool[order_idx];
-    auto& levels = order.side == 'B' ? bids : asks;
-    return levels[order.price];
+    return order.side == 'B' ? bids[order.price] : asks[order.price];
 }

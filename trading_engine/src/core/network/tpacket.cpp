@@ -4,6 +4,7 @@
 
 #include "tpacket.hpp"
 #include "packet.hpp"
+#include "mold.hpp"
 #include "../common/bytes.hpp"
 #include "../common/macros.hpp"
 
@@ -63,7 +64,7 @@ namespace network
         
         offset += sizeof(udphdr);
 
-        // process_mold(frame.subspan(offset));
+        process_mold(frame.subspan(offset));
     }
 
     void TPacketProcessor::process_block(std::span<std::byte> block) noexcept

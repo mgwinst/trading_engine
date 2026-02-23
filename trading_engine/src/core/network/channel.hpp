@@ -54,12 +54,8 @@ namespace network
         epoll_event events_[1];
         CoreID claimed_core_;
 
-        void add_to_epoll_list(std::shared_ptr<RawSocket>& socket);
-
-        void on_event() noexcept
-        {
-            socket_->read();
-        }
+        void add_to_epoll_list(std::shared_ptr<RawSocket>& socket) noexcept;
+        void on_event() noexcept;
     };
     
 } // namespace network

@@ -12,7 +12,7 @@
 #include "../common/thread_utils.hpp"
 #include "../common/cores.hpp"
 
-template <OrderBookType T>
+template <OrderBookType OrderBook>
 class OrderBookManager
 {
 public:   
@@ -27,15 +27,13 @@ public:
 private:
     std::atomic<bool> running_{ false };
     std::vector<std::jthread> orderbook_threads_;
-    std::unordered_map<uint64_t, T> orderbooks_;
+    std::unordered_map<uint64_t, OrderBook> orderbooks_;
     std::vector<CoreID> claimed_cores_;
 };
 
-template <OrderBookType T>
-OrderBookManager<T>::OrderBookManager() : running_{ true }
+template <OrderBookType OrderBook>
+OrderBookManager<OrderBook>::OrderBookManager() : running_{ true }
 {
-    using OrderBook = T;
-
     auto& msg_queues = SPSCQueuePool<Message>::instance();
 
     const auto& symbols = SymbolDirectory::instance().get_watched_symbols();

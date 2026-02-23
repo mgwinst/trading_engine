@@ -2,18 +2,34 @@
 #include "socket.hpp"
 #include "../common/thread_utils.hpp"
 #include "../common/cores.hpp"
-#include "tpacket.hpp"
 
 namespace network
 {
-    void Channel::add_to_epoll_list(std::shared_ptr<RawSocket>& socket)
+    void Channel::add_to_epoll_list(std::shared_ptr<RawSocket>& socket) noexcept
     {
-        socket_ = socket;
-
-        epoll_event ev{.events = EPOLLIN | EPOLLET, .data = {reinterpret_cast<void *>(socket.get())}};
+        epoll_event ev{.events = EPOLLIN | EPOLLET, .data = { socket.get() }};
 
         if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, socket->get_fd(), &ev))
             error_exit("epoll_ctl()");
+    }
+
+    void Channel::on_event() noexcept
+    {
+        auto& ev = events_[0];
+
+        if (ev.events & (EPOLLERR | EPOLLHUP)) {
+            error_exit("epoll error");
+            return;
+        }
+
+        if (ev.events & EPOLLIN) {
+            auto* socket = static_cast<RawSocket *>(ev.data.ptr);
+
+            if (!socket) [[unlikely]]
+                error_exit("socket");
+                return;
+            socket->read();
+        }
     }
 
     void Channel::start_rx()

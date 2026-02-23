@@ -1,5 +1,7 @@
 #pragma once
 
+#include <format>
+
 #include "../common/macros.hpp"
 #include "../common/bytes.hpp"
 #include "../common/concepts.hpp"
@@ -30,6 +32,23 @@ struct alignas(64) Message
     uint16_t locate;
     uint8_t msg_type;
     uint8_t side;
+
+    auto to_string() const noexcept
+    {
+        return std::format(
+            "symbol:       {}\n"
+            "order_id:     {}\n"
+            "new_order_id: {}\n"
+            "timestamp:    {}\n"
+            "price:        {}\n"
+            "qty:          {}\n"
+            "locate:       {}\n"
+            "msg_type:     {}\n"
+            "side:         {}\n",
+            symbol, order_id, new_order_id, timestamp,
+            price, qty, locate, (char)msg_type, (char)side
+        );
+    }
 };
 
 struct Add {};
@@ -283,6 +302,6 @@ FORCE_INLINE Message deserialize(const moldmsg* __restrict__ mold_msg) noexcept
 
         // case 'S': [[unlikely]] Decoder<SystemEvent>::decode(p);
 
-        default: return Message{}; // debug 
+        default: return Message{};
     }
 }

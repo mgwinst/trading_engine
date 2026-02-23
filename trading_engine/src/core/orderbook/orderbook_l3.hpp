@@ -34,6 +34,7 @@ class OrderBookL3
 {
 public:
     OrderBookL3() noexcept :
+        // this is wrong (itch price is price / 10,000) (adjust price level indexing)
         bids(NUM_TICKS),
         asks(NUM_TICKS) {}
 

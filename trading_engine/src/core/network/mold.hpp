@@ -10,12 +10,26 @@
 #include "../common/bytes.hpp"
 #include "../common/macros.hpp"
 
+/*
+inline void on_message_test(const moldmsg* msg) noexcept
+{
+    Message decoded_msg = deserialize(msg);
+
+    if (decoded_msg.msg_type == 0)
+        return;
+
+    std::println("{}", decoded_msg.to_string());
+}
+*/
+
 inline void on_message(const moldmsg* msg) noexcept
 {
     auto& symbol_dir = SymbolDirectory::instance();
 
     Message decoded_msg = deserialize(msg);
-    // if decoded_msg is empty return (not one of the msg types we were anticipating)
+
+    if (decoded_msg.msg_type == 0)
+        return;
 
     if (static_cast<char>(decoded_msg.msg_type) == 'R') [[unlikely]] {
         symbol_dir.update(decoded_msg);
@@ -40,18 +54,19 @@ inline void process_mold(std::span<const std::byte> mold) noexcept
 
     if (!ptr_in_range(base + sizeof(moldhdr), base, end)) [[unlikely]] return;
 
-    uint8_t session_id[10];
-    std::memcpy(session_id, base, 10);
-    uint64_t seq_num = loadu_bswap<uint64_t>(base + offsetof(moldhdr, seq_num));
-    uint16_t msg_count = loadu_bswap<uint16_t>(base + offsetof(moldhdr, msg_count));
+    moldhdr mold_hdr;
+    std::memcpy(&mold_hdr, base, sizeof(moldhdr));
+
+    mold_hdr.seq_num = std::byteswap(mold_hdr.seq_num);
+    mold_hdr.msg_count = std::byteswap(mold_hdr.msg_count);
 
     std::size_t offset = sizeof(moldhdr);
 
-    // even worth it to PREFETCH the first packet?
-    if (msg_count)
+    // even worth it to prefetch the first packet?
+    if (mold_hdr.msg_count)
         PREFETCH(base + offset);
     
-    for (uint16_t i = 0; i < msg_count; i++) {
+    for (uint16_t i = 0; i < mold_hdr.msg_count; i++) {
         const std::byte* mold_msg = base + offset;
         
         if (!ptr_in_range(mold_msg + sizeof(moldmsg), base, end)) [[unlikely]] return;
@@ -66,7 +81,7 @@ inline void process_mold(std::span<const std::byte> mold) noexcept
 
         if (!ptr_in_range(mold_msg + offset, base, end)) [[unlikely]] return;
 
-        if (i + 1 < msg_count) [[likely]] {
+        if (i + 1 < mold_hdr.msg_count) [[likely]] {
             const std::byte* next_mold_msg = base + offset;
             
             if (ptr_in_range(next_mold_msg, base, end)) [[likely]] {
